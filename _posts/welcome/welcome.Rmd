@@ -1,13 +1,13 @@
 ---
 title: "Welcome to DataViz Makeover"
 description: |
-  Welcome to our new blog, DataViz Makeover. We hope you enjoy 
-  reading what we have to say!
+  Welcome to our my blog, DataViz Makeover. I hope you enjoy 
+  reading what I have to say!
 author:
-  - name: Nora Jones 
-    url: https://example.com/norajones
-    affiliation: Spacely Sprockets
-    affiliation_url: https://example.com/spacelysprokets
+  - name: Davmes Tan 
+    url: https://www.linkedin.com/in/davmestan/
+    affiliation: School of Computing and Information Systems
+    affiliation_url: https://scis.smu.edu.sg
 date: 05-22-2021
 output:
   distill::distill_article:
