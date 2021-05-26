@@ -9,4 +9,8 @@ navbar:
       href: index.html
     - text: "About"
       href: about.html
+    - text: "Past DataViz"
+      href: https://wiki.smu.edu.sg/2021t2isss608/DataViz
+    - text: "Past Projects"
+      href: https://wiki.smu.edu.sg/2021t2isss608/Project_Groups
 output: distill::distill_article
