@@ -39,14 +39,19 @@ The title suggested that the data would comprise of data from 2019 to 2020. Howe
 
 ## 2.2 Aesthestics
 
-### 2.2.1 **Unsuitable Usage of Colours**
+### 2.2.1 **Incorrect Usage of Graphs**
+The graphs attempted to use an area graph to depict the import and export values of the respective countries. Such area graph is suitable to depict profit over revenue, when we need visualisation to suggest when would the revenue turn profitable. In addition, profit is a result from revenue, after taking into account other costs and expenses. However, imports and exports are not a result from either one another. Therefore, such a graph is not suitable to depict the import/export value.
 
-### 2.2.2 **Inept for Intuitive Comparison Among Countries**
+### 2.2.2 **Unsuitable Usage of Colours**
+The graphs attempted to use 2 colours to differentiate between import and export value. However, using an incorrect graph will see the value of imports and exports being overlaid with each other, forming a different shade of colour. Although only two colours were used, a third shade of colour appeared, thus creating confusion for readers.
 
-### 2.2.3 **Inconsistent Intervals across Charts**
+### 2.2.3 **Inept for Intuitive Comparison Among Countries**
+The graphs are separated into six different charts and it does not allow the users to intuitively compare the import/export values among the countries. In addition, the reader is unable to comprehend the the pegging order of the six countries, in terms of the total value of import and export for the period 2019 to 2020.
 
-### 2.2.4 **Inconsistent Intervals within Chart**
+### 2.2.4 **Inconsistent Intervals across and within Charts**
+At first glance, the six different charts may suggest that the six countries are having similar trade value from 2019 - 2020. However, upon closer examination, the charts do not have a consistent intervals for the Export value. Similarly, a quick glance may suggest that trade value between imports and exports seem to differ slightly. But it was attributed to different interval scales within the chart itself. Such inconsistencies would not allow the reader to pick up the correct information, and worse, misled the readers.
 
 ### 2.2.5 **Missing Intervals to Indicate Month of Period**
+The x-axis of the graphs was labelled as *"Month of Period*. However, there are no interval ticks to suggest to indicate the various months.
 
 
