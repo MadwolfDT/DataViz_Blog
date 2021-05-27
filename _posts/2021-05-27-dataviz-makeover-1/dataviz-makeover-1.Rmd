@@ -18,7 +18,7 @@ knitr::opts_chunk$set(echo = FALSE)
 # 1. Introduction
 
 
-Merchandise Trade data collated by the Department of Statistics Singapore comprised of total imports/ exports since January 1976. The data is segregated into various regions and countries. We were given a graph depicting the merchandise trade imports/exports for six countries over 2019 and 2020.
+Merchandise Trade data collated by the Department of Statistics Singapore, comprising of total imports/ exports since January 1976, is published on [here](https://www.singstat.gov.sg/find-data/search-by-theme/trade-and-investment/merchandise-trade/latest-data). The data is segregated into various regions and countries. We were given a graph depicting the merchandise trade imports/exports for six countries over 2019 and 2020.
 
 ![](img/Original Chart.png)
 
@@ -59,10 +59,26 @@ The x-axis of the graphs was labelled as *"Month of Period*. However, there are 
 With the above critiques, I would be suggesting an alternate graphical presentation to better present the data to a wider audience. The proposed layout of the improved visualisation is as stated below:
 
 ![](img/Sketch.jpg)
-The improved visualiation would achieve the following:
+The improved visualisation would achieve the following:
 
 # 4. The Improved Viualisation
 
-XXX
+The improved visualisation would address all the critiques and provide visual enhancements. The improvements include:
+
+* Providing **clarity in the title heading**, to suggest that the top size countries were chosen based on total trade value, imports and exports, from 2019 to 2020. This is further enhanced by sorting the countries by their trade value.
+* Providing **interval marks for months** of period from 2019 to 2020, to allow reader to have an indication the trade value (import/export) for the particular month made by a specific country.
+* Ensuring **all six countries depicts the trade value** from 2019 to 2020.
+* Providing **3 separate charts** to allow reader to visualise the data better:
+
+  + Chart 1: Using **horizontal bar chart to displaying the total trade value** (imports and exports) from 2019 to 2020, sorted in descending order for trade value.
+  + Chart 2: Using **line graph to depict the import value of various countries**, differntiated by varying colours, from 2019 to 2020.
+  + Chart 3: Using **line graph to depict the export value of various countries**, differntiated by varying colours, from 2019 to 2020.
+
+* The import and export chart would use **consistent intervals at the y-axis** across both charts, so as to allow the reader to:
+
+  + Intuitively compare the trade value **among the six countries**.
+  + Intuitively compare the import and export value of the **same country**.
+  + Intuitively **rank the countries** in accordance to trade value, import value and export value, separately.
+  
 
 # 5. Step-by-Step Description on how the Improved Visualisation was prepared

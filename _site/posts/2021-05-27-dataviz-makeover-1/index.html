@@ -2101,7 +2101,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div class="d-article">
 <h1 id="introduction">1. Introduction</h1>
-<p>Merchandise Trade data collated by the Department of Statistics Singapore comprised of total imports/ exports since January 1976. The data is segregated into various regions and countries. We were given a graph depicting the merchandise trade imports/exports for six countries over 2019 and 2020.</p>
+<p>Merchandise Trade data collated by the Department of Statistics Singapore comprising of total imports/ exports since January 1976 is published on <a href="https://www.singstat.gov.sg/find-data/search-by-theme/trade-and-investment/merchandise-trade/latest-data">here</a>. The data is segregated into various regions and countries. We were given a graph depicting the merchandise trade imports/exports for six countries over 2019 and 2020.</p>
 <p><img src="img/Original%20Chart.png" /></p>
 <h6 id="figure-1-original-visualisation-depicting-trades-of-six-countries-from-2019---2020">Figure 1: Original Visualisation depicting trades of six countries from 2019 - 2020</h6>
 <h1 id="visualisation-critiques">2. Visualisation Critiques</h1>
@@ -2125,9 +2125,26 @@ document.addEventListener('DOMContentLoaded', function() {
 <p>The x-axis of the graphs was labelled as <em>"Month of Period</em>. However, there are no interval ticks to suggest to indicate the various months.</p>
 <h1 id="proposing-an-improved-visualisation">3. Proposing an Improved Visualisation</h1>
 <p>With the above critiques, I would be suggesting an alternate graphical presentation to better present the data to a wider audience. The proposed layout of the improved visualisation is as stated below:</p>
-<p><img src="img/Sketch.jpg" /> The improved visualiation would achieve the following:</p>
+<p><img src="img/Sketch.jpg" /> The improved visualisation would achieve the following:</p>
 <h1 id="the-improved-viualisation">4. The Improved Viualisation</h1>
-<p>XXX</p>
+<p>The improved visualisation would address all the critiques and provide visual enhancements. The improvements include:</p>
+<ul>
+<li><p>Providing <strong>clarity in the title heading</strong>, to suggest that the top size countries were chosen based on total trade value, imports and exports, from 2019 to 2020. This is further enhanced by sorting the countries by their trade value.</p></li>
+<li><p>Providing <strong>interval marks for months</strong> of period from 2019 to 2020, to allow reader to have an indication the trade value (import/export) for the particular month made by a specific country.</p></li>
+<li><p>Ensuring <strong>all six countries depicts the trade value</strong> from 2019 to 2020.</p></li>
+<li><p>Providing <strong>3 separate charts</strong> to allow reader to visualise the data better:</p>
+<ul>
+<li>Chart 1: Using <strong>horizontal bar chart to displaying the total trade value</strong> (imports and exports) from 2019 to 2020, sorted in descending order for trade value.</li>
+<li>Chart 2: Using <strong>line graph to depict the import value of various countries</strong>, differntiated by varying colours, from 2019 to 2020.</li>
+<li>Chart 3: Using <strong>line graph to depict the export value of various countries</strong>, differntiated by varying colours, from 2019 to 2020.</li>
+</ul></li>
+<li><p>The import and export chart would use <strong>consistent intervals at the y-axis</strong> across both charts, so as to allow the reader to:</p>
+<ul>
+<li>Intuitively compare the trade value <strong>among the six countries</strong>.</li>
+<li>Intuitively compare the import and export value of the <strong>same country</strong>.</li>
+<li>Intuitively <strong>rank the countries</strong> in accordance to trade value, import value and export value, separately.</li>
+</ul></li>
+</ul>
 <h1 id="step-by-step-description-on-how-the-improved-visualisation-was-prepared">5. Step-by-Step Description on how the Improved Visualisation was prepared</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
 <!--radix_placeholder_article_footer-->
