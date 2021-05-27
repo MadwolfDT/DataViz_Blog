@@ -13,4 +13,5 @@ navbar:
       href: https://wiki.smu.edu.sg/2021t2isss608/DataViz
     - text: "Past Projects"
       href: https://wiki.smu.edu.sg/2021t2isss608/Project_Groups
+      
 output: distill::distill_article

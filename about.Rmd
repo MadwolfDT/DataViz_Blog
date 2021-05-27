@@ -1,7 +1,13 @@
 ---
-title: "About this blog"
+title: "My MITB Journey"
 description: |
-  Some additional details about the blog
+  This blog logs my academic journey at MITB
+  
+author:
+  - name: Davmes Tan
+    url: https://www.linkedin.com/in/davmestan/
+    affiliation: School of Computing and Information Systems, Singapore Management University
+    affiliation_url: https://scis.smu.edu.sg
 ---
 
 ```{r setup, include=FALSE}
