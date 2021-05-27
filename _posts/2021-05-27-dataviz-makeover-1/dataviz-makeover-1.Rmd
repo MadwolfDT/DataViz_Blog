@@ -54,4 +54,15 @@ At first glance, the six different charts may suggest that the six countries are
 ### 2.2.5 **Missing Intervals to Indicate Month of Period**
 The x-axis of the graphs was labelled as *"Month of Period*. However, there are no interval ticks to suggest to indicate the various months.
 
+# 3. Proposing an Improved Visualisation
 
+With the above critiques, I would be suggesting an alternate graphical presentation to better present the data to a wider audience. The proposed layout of the improved visualisation is as stated below:
+
+![](img/Sketch.jpg)
+The improved visualiation would achieve the following:
+
+# 4. The Improved Viualisation
+
+XXX
+
+# 5. Step-by-Step Description on how the Improved Visualisation was prepared
