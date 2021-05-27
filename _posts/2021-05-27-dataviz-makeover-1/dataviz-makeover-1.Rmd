@@ -24,3 +24,29 @@ Merchandise Trade data collated by the Department of Statistics Singapore compri
 
 ###### Figure 1: Original Visualisation depicting trades of six countries from 2019 - 2020
 
+# 2. Visualisation Critiques
+
+## 2.1 Clarity
+
+### 2.1.1 **No Clarity in Title**
+The title suggested *Merchandise Trading of Top Six Trading Countries, 2019 - 2020*. However, it was not clear in suggesting how the six countries were accounted for, as top six trading countries. For a layman, the ambiguity could suggest that the countries could be defined as top six trading countries by total import/export trading volume, total import/export trading value, total import volume/ value, total export volume/ value etc.
+
+### 2.1.2 **No Clarity on Period of Measure**
+The title suggested a period of measure, *2019 - 2020*. However, under the period scale (x-axis) for the countries, month of period (2019 to 2021), less Japan, was shown. While the title suggested *month of period*, no indications of months were provided.
+
+### 2.1.3 **Incomplete Data Visualisation for Japan**
+The title suggested that the data would comprise of data from 2019 to 2020. However, under the chart depicting Japan, only "2020" was shown at *Month of Period*.
+
+## 2.2 Aesthestics
+
+### 2.2.1 **Unsuitable Usage of Colours**
+
+### 2.2.2 **Inept for Intuitive Comparison Among Countries**
+
+### 2.2.3 **Inconsistent Intervals across Charts**
+
+### 2.2.4 **Inconsistent Intervals within Chart**
+
+### 2.2.5 **Missing Intervals to Indicate Month of Period**
+
+

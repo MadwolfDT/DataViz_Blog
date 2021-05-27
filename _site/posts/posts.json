@@ -11,9 +11,9 @@
     ],
     "date": "2021-05-27",
     "categories": [],
-    "contents": "\r\n1. Introduction\r\nMerchandise Trade data collated by the Department of Statistics Singapore comprised of total imports/ exports since January 1976. The data is segregated into various regions and countries. We were given a graph depicting the merchandise trade imports/exports for six countries over 2019 and 2020.\r\n\r\nFigure 1: Original Visualisation depicting trades of six countries from 2019 - 2020\r\n\r\n\r\n\r\n",
+    "contents": "\r\n1. Introduction\r\nMerchandise Trade data collated by the Department of Statistics Singapore comprised of total imports/ exports since January 1976. The data is segregated into various regions and countries. We were given a graph depicting the merchandise trade imports/exports for six countries over 2019 and 2020.\r\n\r\nFigure 1: Original Visualisation depicting trades of six countries from 2019 - 2020\r\n2. Visualisation Critiques\r\n2.1 Clarity\r\n2.1.1 No Clarity in Title\r\nThe title suggested Merchandise Trading of Top Six Trading Countries, 2019 - 2020. However, it was not clear in suggesting how the six countries were accounted for, as top six trading countries. For a layman, the ambiguity could suggest that the countries could be defined as top six trading countries by total import/export trading volume, total import/export trading value, total import volume/ value, total export volume/ value etc.\r\n2.1.2 No Clarity on Period of Measure\r\nThe title suggested a period of measure, 2019 - 2020. However, under the period scale (x-axis) for the countries, month of period (2019 to 2021), less Japan, was shown. While the title suggested month of period, no indications of months were provided.\r\n2.1.3 Incomplete Data Visualisation for Japan\r\nThe title suggested that the data would comprise of data from 2019 to 2020. However, under the chart depicting Japan, only “2020” was shown at Month of Period.\r\n2.2 Aesthestics\r\n2.2.1 Unsuitable Usage of Colours\r\n2.2.2 Inept for Intuitive Comparison Among Countries\r\n2.2.3 Inconsistent Intervals across Charts\r\n2.2.4 Inconsistent Intervals within Chart\r\n2.2.5 Missing Intervals to Indicate Month of Period\r\n\r\n\r\n\r\n",
     "preview": {},
-    "last_modified": "2021-05-27T10:37:50+08:00",
-    "input_file": {}
+    "last_modified": "2021-05-27T12:16:21+08:00",
+    "input_file": "dataviz-makeover-1.utf8.md"
   }
 ]
