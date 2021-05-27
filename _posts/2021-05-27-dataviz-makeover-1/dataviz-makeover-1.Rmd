@@ -1,0 +1,26 @@
+---
+title: "DataViz Makeover 1"
+description: |
+  Top 6 countries based on total combined Merchandise Trade Imports/ Exports value between 2019 and 2020
+author:
+  - name: Unknown
+date: 05-27-2021
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# 1. Introduction
+
+
+Merchandise Trade data collated by the Department of Statistics Singapore comprised of total imports/ exports since January 1976. The data is segregated into various regions and countries. We were given a graph depicting the merchandise trade imports/exports for six countries over 2019 and 2020.
+
+![](img/Original Chart.png)
+
+###### Figure 1: Original Visualisation depicting trades of six countries from 2019 - 2020
+
