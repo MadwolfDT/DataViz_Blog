@@ -80,5 +80,7 @@ The improved visualisation would address all the critiques and provide visual en
   + Intuitively compare the import and export value of the **same country**.
   + Intuitively **rank the countries** in accordance to trade value, import value and export value, separately.
   
+![](img/Improved Visualisation.jpg)
+  
 
 # 5. Step-by-Step Description on how the Improved Visualisation was prepared
