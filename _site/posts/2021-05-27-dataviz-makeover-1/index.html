@@ -117,7 +117,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <!--/radix_placeholder_rmarkdown_metadata-->
   
   <script type="text/json" id="radix-resource-manifest">
-  {"type":"character","attributes":{},"value":["dataviz-makeover-1_files/anchor-4.2.2/anchor.min.js","dataviz-makeover-1_files/bowser-1.9.3/bowser.min.js","dataviz-makeover-1_files/distill-2.2.21/template.v2.js","dataviz-makeover-1_files/header-attrs-2.6/header-attrs.js","dataviz-makeover-1_files/jquery-1.11.3/jquery.min.js","dataviz-makeover-1_files/popper-2.6.0/popper.min.js","dataviz-makeover-1_files/tippy-6.2.7/tippy-bundle.umd.min.js","dataviz-makeover-1_files/tippy-6.2.7/tippy-light-border.css","dataviz-makeover-1_files/tippy-6.2.7/tippy.css","dataviz-makeover-1_files/tippy-6.2.7/tippy.umd.min.js","dataviz-makeover-1_files/webcomponents-2.0.0/webcomponents.js","img/Improved Visualisation.jpg","img/Original Chart.png","img/Sketch.jpg","img/Steps/Actual Trade Value.PNG","img/Steps/Create Calculated Field.PNG","img/Steps/Data Down Arrow.PNG","img/Steps/Data Interpreter 2.PNG","img/Steps/Data Interpreter.PNG","img/Steps/Filter Countries.PNG","img/Steps/Filter Date.PNG","img/Steps/Pivot.PNG","img/Steps/Rename Country.PNG","img/Steps/Sort Trade.PNG","img/Steps/String to Date.PNG","img/Steps/Total Value Input.PNG"]}
+  {"type":"character","attributes":{},"value":["dataviz-makeover-1_files/anchor-4.2.2/anchor.min.js","dataviz-makeover-1_files/bowser-1.9.3/bowser.min.js","dataviz-makeover-1_files/distill-2.2.21/template.v2.js","dataviz-makeover-1_files/header-attrs-2.6/header-attrs.js","dataviz-makeover-1_files/jquery-1.11.3/jquery.min.js","dataviz-makeover-1_files/popper-2.6.0/popper.min.js","dataviz-makeover-1_files/tippy-6.2.7/tippy-bundle.umd.min.js","dataviz-makeover-1_files/tippy-6.2.7/tippy-light-border.css","dataviz-makeover-1_files/tippy-6.2.7/tippy.css","dataviz-makeover-1_files/tippy-6.2.7/tippy.umd.min.js","dataviz-makeover-1_files/webcomponents-2.0.0/webcomponents.js","img/Improved Visualisation.jpg","img/Original Chart.png","img/Sketch.jpg","img/Steps/Actual Trade Value.PNG","img/Steps/Create Calculated Field.PNG","img/Steps/Data Down Arrow.PNG","img/Steps/Data Interpreter 2.PNG","img/Steps/Data Interpreter.PNG","img/Steps/Filter Countries.PNG","img/Steps/Filter Date.PNG","img/Steps/Filter Then Add.PNG","img/Steps/Pivot.PNG","img/Steps/Relationship.PNG","img/Steps/Rename Country.PNG","img/Steps/Sort Trade.PNG","img/Steps/Sort Year.PNG","img/Steps/String to Date.PNG","img/Steps/Total Value Input.PNG","img/Total 6 Countries.jpg"]}
   </script>
   <!--radix_placeholder_navigation_in_header-->
 <meta name="distill:offset" content="../.."/>
@@ -2187,6 +2187,15 @@ document.addEventListener('DOMContentLoaded', function() {
 <p>A new column, <em>Import Value</em> would be created, with the adjusted value.</p>
 <p><img src="img/Steps/Actual%20Trade%20Value.PNG" style="width:75.0%" /></p>
 <p>Now that the Data Preparation for T1 is completed, <strong>proceed to do the same for T2</strong> that accounts for the Merchandise Trading Export Value.</p>
+<h4 id="establishing-table-relationships">Establishing Table Relationships</h4>
+<p>There is a need to build the relationship model between both tables. To do so:</p>
+<ul>
+<li>Drag T1 and T2 into top window pane</li>
+<li>Click on the link, connecting between T1 and T2</li>
+<li>Link Country (Import) with Country (Export)</li>
+<li>Link Month (Import) with Month (Export)</li>
+</ul>
+<p><img src="img/Steps/Relationship.PNG" /></p>
 <h2 id="exploratory-data-analysis">5.2 Exploratory Data Analysis</h2>
 <p>There is a need to examine the data, to determine whether the six countries, highlighted, are indeed the top six countries in terms of total Merchandise Trading Value for 2019 to 2020.</p>
 <p>Create a new worksheet, naming it as <em>Total 6 Countries</em>, and create a new calculated field.</p>
@@ -2224,6 +2233,34 @@ document.addEventListener('DOMContentLoaded', function() {
 <li>Click OK</li>
 </ul>
 <p><img src="img/Steps/Filter%20Countries.PNG" style="width:90.0%" /></p>
+<h3 id="finalising-total-trade-value-graph">5.2.3 Finalising Total Trade Value Graph</h3>
+<h4 id="segregating-2019-from-2020">Segregating 2019 from 2020</h4>
+<p>Instead of displaying the total trade value from 2019 to 2020, it would be useful to split the data into 2019 and 2020. To do so:</p>
+<ul>
+<li>Drag the Month(Import) into the <em>Color</em> button</li>
+<li>A window would appear. Click on <em>Add all members</em> <img src="img/Steps/Filter%20Then%20Add.PNG" /></li>
+</ul>
+<h4 id="including-labels">Including Labels</h4>
+<p>It would be useful to add data into the graph To do so:</p>
+<ul>
+<li>Click on Labels</li>
+<li>Check on the box, <em>Show mark labels</em></li>
+</ul>
+<h4 id="sort-the-year">Sort the Year</h4>
+<p>Intuitively, a reader would read from left to right. Therefore, it would be <em>more intuitive</em> to display 2019 data, followed by 2020 data, on the graph. To do so:</p>
+<ul>
+<li>Click on the down arrow at the legend</li>
+<li>Under Sort Order, choose <em>Descending</em> <img src="img/Steps/Sort%20Year.PNG" /></li>
+</ul>
+<h4 id="edit-title-and-alias">Edit Title and Alias</h4>
+<p>There is a need to correctly label the title. To do so, double click on the <em>Total 6 Countries</em> and change it to <strong>Top Six Countries</strong>, based on Total Merchandise Import and Export Value for 2019 to 2020</p>
+<p>To edit the Y-Axis labels:</p>
+<ul>
+<li>Right click on the label, and click on <em>Edit Alias</em></li>
+</ul>
+<h3 id="graph-1-top-six-countries-based-on-total-merchandise-import-and-export-value-for-2019-to-2020">5.2.4 Graph 1: Top Six Countries, based on Total Merchandise Import and Export Value for 2019 to 2020</h3>
+<p>The final graph should look like this:</p>
+<p><img src="img/Total%206%20Countries.jpg" /></p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
 <!--radix_placeholder_article_footer-->
 <!--/radix_placeholder_article_footer-->

@@ -141,6 +141,16 @@ A new column, *Import Value* would be created, with the adjusted value.
 
 Now that the Data Preparation for T1 is completed, **proceed to do the same for T2** that accounts for the Merchandise Trading Export Value.
 
+#### Establishing Table Relationships
+There is a need to build the relationship model between both tables. To do so:
+
+* Drag T1 and T2 into top window pane
+* Click on the link, connecting between T1 and T2
+* Link Country (Import) with Country (Export)
+* Link Month (Import) with Month (Export)
+
+![](img/Steps/Relationship.PNG)
+
 ## 5.2 Exploratory Data Analysis
 There is a need to examine the data, to determine whether the six countries, highlighted, are indeed the top six countries in terms of total Merchandise Trading Value for 2019 to 2020.
 
@@ -186,3 +196,38 @@ Now that we know that Malaysia, China, US, Taiwan, Japan and Hong Kong are our t
 * Click OK
 
 ![](img/Steps/Filter Countries.PNG){width=90%}
+
+### 5.2.3 Finalising Total Trade Value Graph
+
+#### Segregating 2019 from 2020
+Instead of displaying the total trade value from 2019 to 2020, it would be useful to split the data into 2019 and 2020. To do so:
+
+* Drag the Month(Import) into the *Color* button
+* A window would appear. Click on *Add all members*
+![](img/Steps/Filter Then Add.PNG)
+
+#### Including Labels
+It would be useful to add data into the graph To do so:
+
+* Click on Labels
+* Check on the box, *Show mark labels*
+
+#### Sort the Year
+Intuitively, a reader would read from left to right. Therefore, it would be *more intuitive* to display 2019 data, followed by 2020 data, on the graph. To do so:
+
+* Click on the down arrow at the legend
+* Under Sort Order, choose *Descending*
+![](img/Steps/Sort Year.PNG)
+
+#### Edit Title and Alias
+There is a need to correctly label the title. To do so, double click on the *Total 6 Countries* and change it to **Top Six Countries**, based on Total Merchandise Import and Export Value for 2019 to 2020
+
+To edit the Y-Axis labels:
+
+* Right click on the label, and click on *Edit Alias*
+
+### 5.2.4 Graph 1: Top Six Countries, based on Total Merchandise Import and Export Value for 2019 to 2020
+
+The final graph should look like this:
+
+![](img/Total 6 Countries.jpg)
