@@ -117,7 +117,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <!--/radix_placeholder_rmarkdown_metadata-->
   
   <script type="text/json" id="radix-resource-manifest">
-  {"type":"character","attributes":{},"value":["dataviz-makeover-1_files/anchor-4.2.2/anchor.min.js","dataviz-makeover-1_files/bowser-1.9.3/bowser.min.js","dataviz-makeover-1_files/distill-2.2.21/template.v2.js","dataviz-makeover-1_files/header-attrs-2.6/header-attrs.js","dataviz-makeover-1_files/jquery-1.11.3/jquery.min.js","dataviz-makeover-1_files/popper-2.6.0/popper.min.js","dataviz-makeover-1_files/tippy-6.2.7/tippy-bundle.umd.min.js","dataviz-makeover-1_files/tippy-6.2.7/tippy-light-border.css","dataviz-makeover-1_files/tippy-6.2.7/tippy.css","dataviz-makeover-1_files/tippy-6.2.7/tippy.umd.min.js","dataviz-makeover-1_files/webcomponents-2.0.0/webcomponents.js","img/Improved Visualisation.jpg","img/Original Chart.png","img/Sketch.jpg"]}
+  {"type":"character","attributes":{},"value":["dataviz-makeover-1_files/anchor-4.2.2/anchor.min.js","dataviz-makeover-1_files/bowser-1.9.3/bowser.min.js","dataviz-makeover-1_files/distill-2.2.21/template.v2.js","dataviz-makeover-1_files/header-attrs-2.6/header-attrs.js","dataviz-makeover-1_files/jquery-1.11.3/jquery.min.js","dataviz-makeover-1_files/popper-2.6.0/popper.min.js","dataviz-makeover-1_files/tippy-6.2.7/tippy-bundle.umd.min.js","dataviz-makeover-1_files/tippy-6.2.7/tippy-light-border.css","dataviz-makeover-1_files/tippy-6.2.7/tippy.css","dataviz-makeover-1_files/tippy-6.2.7/tippy.umd.min.js","dataviz-makeover-1_files/webcomponents-2.0.0/webcomponents.js","img/Improved Visualisation.jpg","img/Original Chart.png","img/Sketch.jpg","img/Steps/Actual Trade Value.PNG","img/Steps/Create Calculated Field.PNG","img/Steps/Data Interpreter 2.PNG","img/Steps/Data Interpreter.PNG","img/Steps/Pivot.PNG","img/Steps/Rename Country.PNG","img/Steps/String to Date.PNG"]}
   </script>
   <!--radix_placeholder_navigation_in_header-->
 <meta name="distill:offset" content="../.."/>
@@ -2147,6 +2147,46 @@ document.addEventListener('DOMContentLoaded', function() {
 </ul>
 <p><img src="img/Improved%20Visualisation.jpg" /></p>
 <h1 id="step-by-step-description-on-how-the-improved-visualisation-was-prepared">5. Step-by-Step Description on how the Improved Visualisation was prepared</h1>
+<h2 id="data-preparation">5.1 Data Preparation</h2>
+<h3 id="using-tableau-data-interpreter">5.1.1 Using Tableau Data Interpreter</h3>
+<p><img src="img/Steps/Data%20Interpreter.PNG" style="width:30.0%" /> <img src="img/Steps/Data%20Interpreter%202.PNG" style="width:32.0%" /></p>
+<p>Tableau Data Interpreter will attempt to identify the structure of the Excel file and convert it into a suitable format for Tableau processing. There are 3 worksheets inside the Excel file, <em>Content</em>, <em>T1</em> and <em>T2</em>. For thise exercise, we will be using T1 and T2.</p>
+<h3 id="preparing-t1-and-t2">5.1.2 Preparing T1 and T2</h3>
+<p>Upon examining T1, it was observed that it contains all the Merchandise Trading <strong>Imports</strong> from various countries and regions from Jan 1976. However, the data is organised such that every observations (rows) represents the trade value of a specific country/ region from Jan 1976. This would not be suitable for our analysis. Therefore, there is a need to pivot the data such that we have two variables, <em>Month of Trade</em> and <em>Value</em>. To pivot the table:</p>
+<ul>
+<li>Select all observations, less <em>Variables</em></li>
+<li>Right-click and select <em>Pivot</em></li>
+</ul>
+<p><img src="img/Steps/Pivot.PNG" /></p>
+<h3 id="adjust-variable-names-and-types">5.1.3 Adjust Variable Names and Types</h3>
+<h4 id="month-of-period">Month of Period</h4>
+<p>While the <strong>Month of Period</strong> of import is recorded as <em>Month (MMM) and Year (YYYY)</em>, Tableau identified it as a <em>string</em> format. Therefore, there is a need to adjust it into a <em>Date</em> format. To do this:</p>
+<ul>
+<li>Click on the <em>Abc</em></li>
+<li>Click on Date</li>
+</ul>
+<p><img src="img/Steps/String%20to%20Date.PNG" style="width:50.0%" /></p>
+<h4 id="rename-variables">Rename Variables</h4>
+<p>The countries/ regions are described as <em>Variables</em>. To rename:</p>
+<ul>
+<li>Click on the Column</li>
+<li>Right-Click and choose <em>Rename</em></li>
+<li>TYpe <em>Country</em></li>
+</ul>
+<p><img src="img/Steps/Rename%20Country.PNG" /></p>
+<h4 id="creating-calculated-field">Creating Calculated Field</h4>
+<p>The Merchandise Trading Value are depicted in Thousands of Dollars (’000). To depict the exact value for computation and display, we need to create a calculated field. To do this:</p>
+<ul>
+<li>Hover the cursor to the <em>down-arrow</em> at the column variable</li>
+<li>Click on <em>Create Calculated Field</em></li>
+<li>Name it as <em>Import Value</em></li>
+<li>Under the input box, type [Pivot Field Values] * 1000</li>
+<li>Click on <em>OK</em></li>
+</ul>
+<p><img src="img/Steps/Create%20Calculated%20Field.PNG" style="width:75.0%" /></p>
+<p>A new column, <em>Import Value</em> would be created, with the adjusted value.</p>
+<p><img src="img/Steps/Actual%20Trade%20Value.PNG" style="width:75.0%" /></p>
+<p>Now that the Data Preparation for T1 is completed, <strong>proceed to do the same for T2</strong> that accounts for the Merchandise Trading Export Value.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
 <!--radix_placeholder_article_footer-->
 <!--/radix_placeholder_article_footer-->
