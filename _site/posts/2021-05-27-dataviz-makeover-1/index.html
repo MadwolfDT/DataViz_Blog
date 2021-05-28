@@ -112,7 +112,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   <!--radix_placeholder_rmarkdown_metadata-->
 
 <script type="text/json" id="radix-rmarkdown-metadata">
-{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","author","date","output"]}},"value":[{"type":"character","attributes":{},"value":["DataViz Makeover 1"]},{"type":"character","attributes":{},"value":["Top 6 countries based on total combined Merchandise Trade Imports/ Exports value between 2019 and 2020"]},{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","url","affiliation","affiliation_url"]}},"value":[{"type":"character","attributes":{},"value":["Davmes Tan"]},{"type":"character","attributes":{},"value":["https://www.linkedin.com/in/davmestan/"]},{"type":"character","attributes":{},"value":["School of Computing and Information Systems, Singapore Management University"]},{"type":"character","attributes":{},"value":["https://scis.smu.edu.sg"]}]}]},{"type":"character","attributes":{},"value":["05-27-2021"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["self_contained"]}},"value":[{"type":"logical","attributes":{},"value":[false]}]}]}]}
+{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","author","date","output"]}},"value":[{"type":"character","attributes":{},"value":["DataViz Makeover 1"]},{"type":"character","attributes":{},"value":["Top 6 countries based on total combined Merchandise Trade Imports/ Exports value between 2019 and 2020"]},{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","url","affiliation","affiliation_url"]}},"value":[{"type":"character","attributes":{},"value":["Davmes Tan"]},{"type":"character","attributes":{},"value":["https://www.linkedin.com/in/davmestan/"]},{"type":"character","attributes":{},"value":["School of Computing and Information Systems, Singapore Management University"]},{"type":"character","attributes":{},"value":["https://scis.smu.edu.sg"]}]}]},{"type":"character","attributes":{},"value":["05-27-2021"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["toc","toc_depth","self_contained"]}},"value":[{"type":"logical","attributes":{},"value":[true]},{"type":"integer","attributes":{},"value":[3]},{"type":"logical","attributes":{},"value":[false]}]}]}]}
 </script>
 <!--/radix_placeholder_rmarkdown_metadata-->
   
@@ -2100,6 +2100,62 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <div class="d-article">
+<div class="d-contents d-contents-float">
+<nav class="l-text toc figcaption" id="TOC">
+<h3>Contents</h3>
+<ul>
+<li><a href="#introduction">1. Introduction</a></li>
+<li><a href="#visualisation-critiques">2. Visualisation Critiques</a>
+<ul>
+<li><a href="#clarity">2.1 Clarity</a>
+<ul>
+<li><a href="#no-clarity-in-title">2.1.1 <strong>No Clarity in Title</strong></a></li>
+<li><a href="#no-clarity-on-period-of-measure">2.1.2 <strong>No Clarity on Period of Measure</strong></a></li>
+<li><a href="#incomplete-data-visualisation-for-japan">2.1.3 <strong>Incomplete Data Visualisation for Japan</strong></a></li>
+</ul></li>
+<li><a href="#aesthestics">2.2 Aesthestics</a>
+<ul>
+<li><a href="#incorrect-usage-of-graphs">2.2.1 <strong>Incorrect Usage of Graphs</strong></a></li>
+<li><a href="#unsuitable-usage-of-colours">2.2.2 <strong>Unsuitable Usage of Colours</strong></a></li>
+<li><a href="#inept-for-intuitive-comparison-among-countries">2.2.3 <strong>Inept for Intuitive Comparison Among Countries</strong></a></li>
+<li><a href="#inconsistent-intervals-across-and-within-charts">2.2.4 <strong>Inconsistent Intervals across and within Charts</strong></a></li>
+<li><a href="#missing-intervals-to-indicate-month-of-period">2.2.5 <strong>Missing Intervals to Indicate Month of Period</strong></a></li>
+</ul></li>
+</ul></li>
+<li><a href="#proposing-an-improved-visualisation">3. Proposing an Improved Visualisation</a></li>
+<li><a href="#the-improved-viualisation">4. The Improved Viualisation</a></li>
+<li><a href="#step-by-step-description-on-how-the-improved-visualisation-was-prepared">5. Step-by-Step Description on how the Improved Visualisation was prepared</a>
+<ul>
+<li><a href="#data-preparation">5.1 Data Preparation</a>
+<ul>
+<li><a href="#using-tableau-data-interpreter">5.1.1 Using Tableau Data Interpreter</a></li>
+<li><a href="#preparing-t1-and-t2">5.1.2 Preparing T1 and T2</a></li>
+<li><a href="#adjust-variable-names-and-types">5.1.3 Adjust Variable Names and Types</a></li>
+</ul></li>
+<li><a href="#exploratory-data-analysis">5.2 Exploratory Data Analysis</a></li>
+<li><a href="#creating-an-overall-trade-2019-to-2020-graph-for-top-six-countries">5.3 Creating An Overall Trade (2019 to 2020) Graph for Top Six Countries</a>
+<ul>
+<li><a href="#filter-out-all-countries-less-the-top-six">5.3.1 Filter Out all Countries, less the Top Six</a></li>
+<li><a href="#finalising-total-trade-value-graph">5.3.2 Finalising Total Trade Value Graph</a></li>
+<li><a href="#graph-1-top-six-countries-based-on-total-merchandise-import-and-export-value-for-2019-to-2020">5.3.3 Graph 1: Top Six Countries, based on Total Merchandise Import and Export Value for 2019 to 2020</a></li>
+</ul></li>
+<li><a href="#import-and-export-graph">5.4 Import and Export Graph</a>
+<ul>
+<li><a href="#creating-the-graphs">5.4.1 Creating the Graphs</a></li>
+<li><a href="#total-import-value-for-the-top-six-countries">5.4.2 Total Import Value for the Top Six Countries</a></li>
+<li><a href="#total-export-value-for-the-top-six-countries">5.4.3 Total Export Value for the Top Six Countries</a></li>
+</ul></li>
+<li><a href="#creating-a-visualisation-dashboard">5.5 Creating a Visualisation Dashboard</a></li>
+</ul></li>
+<li><a href="#new-insights-from-the-improved-visualisation">6. New Insights from the Improved Visualisation</a>
+<ul>
+<li><a href="#china---singapores-top-importer-and-exporter-country">6.1 China - Singapore’s Top Importer and Exporter Country</a></li>
+<li><a href="#hong-kong---low-import-value-high-export-value">6.2 Hong Kong - Low Import Value, High Export Value</a></li>
+<li><a href="#chinas-total-trade-with-singapore-hong-kongs-total-trade-taiwans-total-trade">6.3 China’s Total Trade with Singapore = Hong Kong’s Total Trade + Taiwan’s Total Trade</a></li>
+</ul></li>
+</ul>
+</nav>
+</div>
 <h1 id="introduction">1. Introduction</h1>
 <p>Merchandise Trade data collated by the Department of Statistics Singapore, comprising of total imports/ exports since January 1976, is published on <a href="https://www.singstat.gov.sg/find-data/search-by-theme/trade-and-investment/merchandise-trade/latest-data">here</a>. The data is segregated into various regions and countries. We were given a graph depicting the merchandise trade imports/exports for six countries over 2019 and 2020.</p>
 <p><img src="img/Original%20Chart.png" /></p>
