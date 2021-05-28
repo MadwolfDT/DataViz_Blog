@@ -113,13 +113,14 @@ While the **Month of Period** of import is recorded as *Month (MMM) and Year (YY
 * Click on Date
 
 ![](img/Steps/String to Date.PNG){width=50%}
+* Rename the Dimension as Month (Import)
 
 #### Rename Variables
 The countries/ regions are described as *Variables*. To rename:
 
 * Click on the Column
 * Right-Click and choose *Rename*
-* TYpe *Country*
+* TYpe *Country (Import)*
 
 ![](img/Steps/Rename Country.PNG)
 
@@ -139,3 +140,23 @@ A new column, *Import Value* would be created, with the adjusted value.
 ![](img/Steps/Actual Trade Value.PNG){width=75%}
 
 Now that the Data Preparation for T1 is completed, **proceed to do the same for T2** that accounts for the Merchandise Trading Export Value.
+
+## 5.2 Exploratory Data Analysis
+There is a need to examine the data, to determine whether the six countries, highlighted, are indeed the top six countries in terms of total Merchandise Trading Value for 2019 to 2020.
+
+Create a new worksheet, naming it as *Total 6 Countries*, and create a new calculated field.
+
+* Under the Data Pane, click on the down arrow
+![](img/Steps/Data Down Arrow.PNG)
+* Click on Create Calculated Field
+* Type *Total Import/Export Value* for the Dimension Name
+* Under the input box, type *[Import Value] + [Export Value]*
+![](img/Steps/Total Value Input.PNG)
+* Click OK
+
+Now we are ready to create the **first Data Visualisation Worksheet**.
+
+We need to narrow the data **to contain only records from 2019 to 2020**. We can use the filter option to achieve this. To do this:
+
+* Drag the Month (Import) into the *Filter Pane*, and then choose *Years* and click *Next*
+![](img/Steps/Filter Date.PNG)
