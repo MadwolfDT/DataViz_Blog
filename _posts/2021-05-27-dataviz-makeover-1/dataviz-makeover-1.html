@@ -116,7 +116,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   <!--/radix_placeholder_rmarkdown_metadata-->
   
   <script type="text/json" id="radix-resource-manifest">
-  {"type":"character","attributes":{},"value":["dataviz-makeover-1_files/anchor-4.2.2/anchor.min.js","dataviz-makeover-1_files/bowser-1.9.3/bowser.min.js","dataviz-makeover-1_files/distill-2.2.21/template.v2.js","dataviz-makeover-1_files/header-attrs-2.6/header-attrs.js","dataviz-makeover-1_files/jquery-1.11.3/jquery.min.js","dataviz-makeover-1_files/popper-2.6.0/popper.min.js","dataviz-makeover-1_files/tippy-6.2.7/tippy-bundle.umd.min.js","dataviz-makeover-1_files/tippy-6.2.7/tippy-light-border.css","dataviz-makeover-1_files/tippy-6.2.7/tippy.css","dataviz-makeover-1_files/tippy-6.2.7/tippy.umd.min.js","dataviz-makeover-1_files/webcomponents-2.0.0/webcomponents.js","img/Improved Visualisation.jpg","img/Original Chart.png","img/Sketch.jpg","img/Steps/Actual Trade Value.PNG","img/Steps/Create Calculated Field.PNG","img/Steps/Data Down Arrow.PNG","img/Steps/Data Interpreter 2.PNG","img/Steps/Data Interpreter.PNG","img/Steps/Filter Countries.PNG","img/Steps/Filter Date.PNG","img/Steps/Filter Then Add.PNG","img/Steps/Pivot.PNG","img/Steps/Relationship.PNG","img/Steps/Rename Country.PNG","img/Steps/Sort Trade.PNG","img/Steps/Sort Year.PNG","img/Steps/String to Date.PNG","img/Steps/Total Value Input.PNG","img/Total 6 Countries.jpg"]}
+  {"type":"character","attributes":{},"value":["dataviz-makeover-1_files/anchor-4.2.2/anchor.min.js","dataviz-makeover-1_files/bowser-1.9.3/bowser.min.js","dataviz-makeover-1_files/distill-2.2.21/template.v2.js","dataviz-makeover-1_files/header-attrs-2.6/header-attrs.js","dataviz-makeover-1_files/jquery-1.11.3/jquery.min.js","dataviz-makeover-1_files/popper-2.6.0/popper.min.js","dataviz-makeover-1_files/tippy-6.2.7/tippy-bundle.umd.min.js","dataviz-makeover-1_files/tippy-6.2.7/tippy-light-border.css","dataviz-makeover-1_files/tippy-6.2.7/tippy.css","dataviz-makeover-1_files/tippy-6.2.7/tippy.umd.min.js","dataviz-makeover-1_files/webcomponents-2.0.0/webcomponents.js","img/Final Export.jpg","img/Final Import.jpg","img/Improved Visualisation.jpg","img/Original Chart.png","img/Sketch.jpg","img/Steps/Actual Trade Value.PNG","img/Steps/Create Calculated Field.PNG","img/Steps/Data Down Arrow.PNG","img/Steps/Data Interpreter 2.PNG","img/Steps/Data Interpreter.PNG","img/Steps/Filter Countries.PNG","img/Steps/Filter Date.PNG","img/Steps/Filter Then Add.PNG","img/Steps/Import.png","img/Steps/Pivot.PNG","img/Steps/Relationship.PNG","img/Steps/Rename Country.PNG","img/Steps/Select Month.PNG","img/Steps/Sort Trade.PNG","img/Steps/Sort Year.PNG","img/Steps/String to Date.PNG","img/Steps/Total Value Input.PNG","img/Total 6 Countries.jpg"]}
   </script>
   <!--radix_placeholder_navigation_in_header-->
   <!--/radix_placeholder_navigation_in_header-->
@@ -1585,7 +1585,6 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <li>Click OK</li>
 </ul>
 <p>Now we are ready to create the <strong>first Data Visualisation Worksheet</strong>.</p>
-<h3 id="exploring-the-top-six-countries">5.2.1 Exploring the Top Six Countries</h3>
 <p>We need to narrow the data <strong>to contain only records from 2019 to 2020</strong>. We can use the filter option to achieve this. To do this:</p>
 <ul>
 <li>Drag the Month (Import) into the <em>Filter Pane</em>, and then choose <em>Years</em> and click <em>Next</em>. Select 2019 and 2020 and click OK.</li>
@@ -1601,7 +1600,8 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <li>Under <em>Field Name</em>, choose <em>Total Import/Export Value</em></li>
 </ul>
 <p><img src="img/Steps/Sort%20Trade.PNG" style="width:90.0%" /></p>
-<h3 id="filter-out-all-countries-less-the-top-six">5.2.2 Filter Out all Countries, less the Top Six</h3>
+<h2 id="creating-an-overall-trade-2019-to-2020-graph-for-top-six-countries">5.3 Creating An Overall Trade (2019 to 2020) Graph for Top Six Countries</h2>
+<h3 id="filter-out-all-countries-less-the-top-six">5.3.1 Filter Out all Countries, less the Top Six</h3>
 <p>Now that we know that Malaysia, China, US, Taiwan, Japan and Hong Kong are our top six countries with the highest trade value (import and export) for 2019 and 2020, we will filter out all other countries. To do so:</p>
 <ul>
 <li>Drag the Country (Import) into the <em>Filter</em> pane</li>
@@ -1611,7 +1611,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <li>Click OK</li>
 </ul>
 <p><img src="img/Steps/Filter%20Countries.PNG" style="width:90.0%" /></p>
-<h3 id="finalising-total-trade-value-graph">5.2.3 Finalising Total Trade Value Graph</h3>
+<h3 id="finalising-total-trade-value-graph">5.3.2 Finalising Total Trade Value Graph</h3>
 <h4 id="segregating-2019-from-2020">Segregating 2019 from 2020</h4>
 <p>Instead of displaying the total trade value from 2019 to 2020, it would be useful to split the data into 2019 and 2020. To do so:</p>
 <ul>
@@ -1636,9 +1636,43 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <ul>
 <li>Right click on the label, and click on <em>Edit Alias</em></li>
 </ul>
-<h3 id="graph-1-top-six-countries-based-on-total-merchandise-import-and-export-value-for-2019-to-2020">5.2.4 Graph 1: Top Six Countries, based on Total Merchandise Import and Export Value for 2019 to 2020</h3>
+<h3 id="graph-1-top-six-countries-based-on-total-merchandise-import-and-export-value-for-2019-to-2020">5.3.3 Graph 1: Top Six Countries, based on Total Merchandise Import and Export Value for 2019 to 2020</h3>
 <p>The final graph should look like this:</p>
 <p><img src="img/Total%206%20Countries.jpg" /></p>
+<h2 id="import-and-export-graph">5.4 Import and Export Graph</h2>
+<h3 id="creating-the-graphs">5.4.1 Creating the Graphs</h3>
+<p>To create a new import graph, create a new <em>Worksheet</em> and rename it as <strong>Import</strong>. Using the steps described above, we would:</p>
+<ul>
+<li><p>Filter out all countries less the six countries</p></li>
+<li><p>Select only 2019 and 2020 data</p></li>
+<li><p>Drag the <em>Import Value</em> to <em>Rows</em></p></li>
+<li><p>Drag the <em>Month (Import)</em> to <em>Columns</em>. Click the down arrow and select the 2nd Month</p>
+<p><img src="img/Steps/Select%20Month.PNG" style="width:50.0%" /></p></li>
+<li><p>Add the <em>Country (Import)</em> into <em>Color</em></p></li>
+</ul>
+<p>The graph should look like this:</p>
+<p><img src="img/Steps/Import.png" /> There is a need to adjust the aesthetics for the graph. The following would be done:</p>
+<ul>
+<li>Adjusting the Y-axis to allow both Import and Export to have the same scale.</li>
+<li>Adjusting the X-axis to orientate the label to be vertically aligned.</li>
+<li>Adjusting the intervals for X and Y-axis, to include appropriate major and minor ticks.</li>
+<li>Adjusting the legend to better reflect the countries.</li>
+<li>Adjusting the labels on X and Y-axis.</li>
+</ul>
+<p>Do the same for Export Worksheet. The final graphs for Import and Export should look like this:</p>
+<h3 id="total-import-value-for-the-top-six-countries">5.4.2 Total Import Value for the Top Six Countries</h3>
+<p><img src="img/Final%20Import.jpg" /></p>
+<h3 id="total-export-value-for-the-top-six-countries">5.4.3 Total Export Value for the Top Six Countries</h3>
+<p><img src="img/Final%20Export.jpg" /></p>
+<h2 id="creating-a-visualisation-dashboard">5.5 Creating a Visualisation Dashboard</h2>
+<p>XXX</p>
+<h1 id="new-insights-from-the-improved-visualisation">6. New Insights from the Improved Visualisation</h1>
+<h2 id="china---singapores-top-importer-and-exporter-country">6.1 China - Singapore’s Top Importer and Exporter Country</h2>
+<p>In 2019 and 2020, China is Singapore’s top importer and exporter country, accounting for SGD137Bn and SGD136Bn of goods for 2019 and 2020 respectively.</p>
+<h2 id="hong-kong---low-import-value-high-export-value">6.2 Hong Kong - Low Import Value, High Export Value</h2>
+<p>In 2019 and 2020, while Hong Kong’s imports are under SGD1Bn for most of the months, Singapore exported more than SGD4Bn worth of goods to Hong Kong monthly. Hong Kong is Singapore’s 2nd largest exporter country. The surge in exports to Hong Kong could be due to transshipment where Hong Kong is a port hub, connected to the rest of the world.</p>
+<h2 id="chinas-total-trade-with-singapore-hong-kongs-total-trade-taiwans-total-trade">6.3 China’s Total Trade with Singapore = Hong Kong’s Total Trade + Taiwan’s Total Trade</h2>
+<p>In 2019 and 2020, China’s total trade value with Singapore reached about SGD273Bn. The trade value is almost equivalent to Hong Kong’s trade value (SGD133Bn) and Taiwan’s trade value (SGD141Bn).</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
 <!--radix_placeholder_article_footer-->
 <!--/radix_placeholder_article_footer-->

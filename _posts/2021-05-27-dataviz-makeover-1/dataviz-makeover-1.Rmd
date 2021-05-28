@@ -166,8 +166,6 @@ Create a new worksheet, naming it as *Total 6 Countries*, and create a new calcu
 
 Now we are ready to create the **first Data Visualisation Worksheet**.
 
-### 5.2.1 Exploring the Top Six Countries
-
 We need to narrow the data **to contain only records from 2019 to 2020**. We can use the filter option to achieve this. To do this:
 
 * Drag the Month (Import) into the *Filter Pane*, and then choose *Years* and click *Next*. Select 2019 and 2020 and click OK.
@@ -185,7 +183,9 @@ To create the visualisation graph:
 
 ![](img/Steps/Sort Trade.PNG){width=90%}
 
-### 5.2.2 Filter Out all Countries, less the Top Six
+## 5.3 Creating An Overall Trade (2019 to 2020) Graph for Top Six Countries
+
+### 5.3.1 Filter Out all Countries, less the Top Six
 
 Now that we know that Malaysia, China, US, Taiwan, Japan and Hong Kong are our top six countries with the highest trade value (import and export) for 2019 and 2020, we will filter out all other countries. To do so:
 
@@ -197,7 +197,7 @@ Now that we know that Malaysia, China, US, Taiwan, Japan and Hong Kong are our t
 
 ![](img/Steps/Filter Countries.PNG){width=90%}
 
-### 5.2.3 Finalising Total Trade Value Graph
+### 5.3.2 Finalising Total Trade Value Graph
 
 #### Segregating 2019 from 2020
 Instead of displaying the total trade value from 2019 to 2020, it would be useful to split the data into 2019 and 2020. To do so:
@@ -226,8 +226,58 @@ To edit the Y-Axis labels:
 
 * Right click on the label, and click on *Edit Alias*
 
-### 5.2.4 Graph 1: Top Six Countries, based on Total Merchandise Import and Export Value for 2019 to 2020
+### 5.3.3 Graph 1: Top Six Countries, based on Total Merchandise Import and Export Value for 2019 to 2020
 
 The final graph should look like this:
 
 ![](img/Total 6 Countries.jpg)
+
+## 5.4 Import and Export Graph
+
+### 5.4.1 Creating the Graphs
+
+To create a new import graph, create a new *Worksheet* and rename it as **Import**. Using the steps described above, we would:
+
+* Filter out all countries less the six countries
+* Select only 2019 and 2020 data
+* Drag the *Import Value* to *Rows*
+* Drag the *Month (Import)* to *Columns*. Click the down arrow and select the 2nd Month
+  
+  ![](img/Steps/Select Month.PNG){width=50%}
+* Add the *Country (Import)* into *Color*
+
+The graph should look like this:
+
+![](img/Steps/Import.png)
+There is a need to adjust the aesthetics for the graph. The following would be done:
+
+* Adjusting the Y-axis to allow both Import and Export to have the same scale.
+* Adjusting the X-axis to orientate the label to be vertically aligned.
+* Adjusting the intervals for X and Y-axis, to include appropriate major and minor ticks.
+* Adjusting the legend to better reflect the countries.
+* Adjusting the labels on X and Y-axis.
+
+Do the same for Export Worksheet. The final graphs for Import and Export should look like this:
+
+### 5.4.2 Total Import Value for the Top Six Countries
+
+![](img/Final Import.jpg)
+
+### 5.4.3 Total Export Value for the Top Six Countries
+
+![](img/Final Export.jpg)
+
+## 5.5 Creating a Visualisation Dashboard
+
+XXX
+
+# 6. New Insights from the Improved Visualisation
+
+## 6.1 China - Singapore's Top Importer and Exporter Country
+In 2019 and 2020, China is Singapore's top importer and exporter country, accounting for SGD137Bn and SGD136Bn of goods for 2019 and 2020 respectively.
+
+## 6.2 Hong Kong - Low Import Value, High Export Value
+In 2019 and 2020, while Hong Kong's imports are under SGD1Bn for most of the months, Singapore exported more than SGD4Bn worth of goods to Hong Kong monthly. Hong Kong is Singapore's 2nd largest exporter country. The surge in exports to Hong Kong could be due to transshipment where Hong Kong is a port hub, connected to the rest of the world.
+
+## 6.3 China's Total Trade with Singapore = Hong Kong's Total Trade + Taiwan's Total Trade
+In 2019 and 2020, China's total trade value with Singapore reached about SGD273Bn. The trade value is almost equivalent to Hong Kong's trade value (SGD133Bn) and Taiwan's trade value (SGD141Bn).
