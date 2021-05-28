@@ -156,7 +156,33 @@ Create a new worksheet, naming it as *Total 6 Countries*, and create a new calcu
 
 Now we are ready to create the **first Data Visualisation Worksheet**.
 
+### 5.2.1 Exploring the Top Six Countries
+
 We need to narrow the data **to contain only records from 2019 to 2020**. We can use the filter option to achieve this. To do this:
 
-* Drag the Month (Import) into the *Filter Pane*, and then choose *Years* and click *Next*
+* Drag the Month (Import) into the *Filter Pane*, and then choose *Years* and click *Next*. Select 2019 and 2020 and click OK.
+
 ![](img/Steps/Filter Date.PNG)
+
+To create the visualisation graph:
+
+* Drag the Total Import/Export Value to *Columns*
+* Drag the Country (Import) to *Rows*
+* Click on Country (Import) down arrow and choose *Sort*
+* Under *Sort By*, choose *Field*
+* Under *Sort Order*, choose *Descending*
+* Under *Field Name*, choose *Total Import/Export Value*
+
+![](img/Steps/Sort Trade.PNG){width=90%}
+
+### 5.2.2 Filter Out all Countries, less the Top Six
+
+Now that we know that Malaysia, China, US, Taiwan, Japan and Hong Kong are our top six countries with the highest trade value (import and export) for 2019 and 2020, we will filter out all other countries. To do so:
+
+* Drag the Country (Import) into the *Filter* pane
+* Click on *None* to deselect all countries
+* Search for the six countries and manually check their boxes
+* Ensure all 6 countries are selected
+* Click OK
+
+![](img/Steps/Filter Countries.PNG){width=90%}

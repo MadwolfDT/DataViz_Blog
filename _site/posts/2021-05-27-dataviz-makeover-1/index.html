@@ -117,7 +117,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <!--/radix_placeholder_rmarkdown_metadata-->
   
   <script type="text/json" id="radix-resource-manifest">
-  {"type":"character","attributes":{},"value":["dataviz-makeover-1_files/anchor-4.2.2/anchor.min.js","dataviz-makeover-1_files/bowser-1.9.3/bowser.min.js","dataviz-makeover-1_files/distill-2.2.21/template.v2.js","dataviz-makeover-1_files/header-attrs-2.6/header-attrs.js","dataviz-makeover-1_files/jquery-1.11.3/jquery.min.js","dataviz-makeover-1_files/popper-2.6.0/popper.min.js","dataviz-makeover-1_files/tippy-6.2.7/tippy-bundle.umd.min.js","dataviz-makeover-1_files/tippy-6.2.7/tippy-light-border.css","dataviz-makeover-1_files/tippy-6.2.7/tippy.css","dataviz-makeover-1_files/tippy-6.2.7/tippy.umd.min.js","dataviz-makeover-1_files/webcomponents-2.0.0/webcomponents.js","img/Improved Visualisation.jpg","img/Original Chart.png","img/Sketch.jpg","img/Steps/Actual Trade Value.PNG","img/Steps/Create Calculated Field.PNG","img/Steps/Data Down Arrow.PNG","img/Steps/Data Interpreter 2.PNG","img/Steps/Data Interpreter.PNG","img/Steps/Filter Date.PNG","img/Steps/Pivot.PNG","img/Steps/Rename Country.PNG","img/Steps/String to Date.PNG","img/Steps/Total Value Input.PNG"]}
+  {"type":"character","attributes":{},"value":["dataviz-makeover-1_files/anchor-4.2.2/anchor.min.js","dataviz-makeover-1_files/bowser-1.9.3/bowser.min.js","dataviz-makeover-1_files/distill-2.2.21/template.v2.js","dataviz-makeover-1_files/header-attrs-2.6/header-attrs.js","dataviz-makeover-1_files/jquery-1.11.3/jquery.min.js","dataviz-makeover-1_files/popper-2.6.0/popper.min.js","dataviz-makeover-1_files/tippy-6.2.7/tippy-bundle.umd.min.js","dataviz-makeover-1_files/tippy-6.2.7/tippy-light-border.css","dataviz-makeover-1_files/tippy-6.2.7/tippy.css","dataviz-makeover-1_files/tippy-6.2.7/tippy.umd.min.js","dataviz-makeover-1_files/webcomponents-2.0.0/webcomponents.js","img/Improved Visualisation.jpg","img/Original Chart.png","img/Sketch.jpg","img/Steps/Actual Trade Value.PNG","img/Steps/Create Calculated Field.PNG","img/Steps/Data Down Arrow.PNG","img/Steps/Data Interpreter 2.PNG","img/Steps/Data Interpreter.PNG","img/Steps/Filter Countries.PNG","img/Steps/Filter Date.PNG","img/Steps/Pivot.PNG","img/Steps/Rename Country.PNG","img/Steps/Sort Trade.PNG","img/Steps/String to Date.PNG","img/Steps/Total Value Input.PNG"]}
   </script>
   <!--radix_placeholder_navigation_in_header-->
 <meta name="distill:offset" content="../.."/>
@@ -2198,10 +2198,32 @@ document.addEventListener('DOMContentLoaded', function() {
 <li>Click OK</li>
 </ul>
 <p>Now we are ready to create the <strong>first Data Visualisation Worksheet</strong>.</p>
+<h3 id="exploring-the-top-six-countries">5.2.1 Exploring the Top Six Countries</h3>
 <p>We need to narrow the data <strong>to contain only records from 2019 to 2020</strong>. We can use the filter option to achieve this. To do this:</p>
 <ul>
-<li>Drag the Month (Import) into the <em>Filter Pane</em>, and then choose <em>Years</em> and click <em>Next</em> <img src="img/Steps/Filter%20Date.PNG" /></li>
+<li>Drag the Month (Import) into the <em>Filter Pane</em>, and then choose <em>Years</em> and click <em>Next</em>. Select 2019 and 2020 and click OK.</li>
 </ul>
+<p><img src="img/Steps/Filter%20Date.PNG" /></p>
+<p>To create the visualisation graph:</p>
+<ul>
+<li>Drag the Total Import/Export Value to <em>Columns</em></li>
+<li>Drag the Country (Import) to <em>Rows</em></li>
+<li>Click on Country (Import) down arrow and choose <em>Sort</em></li>
+<li>Under <em>Sort By</em>, choose <em>Field</em></li>
+<li>Under <em>Sort Order</em>, choose <em>Descending</em></li>
+<li>Under <em>Field Name</em>, choose <em>Total Import/Export Value</em></li>
+</ul>
+<p><img src="img/Steps/Sort%20Trade.PNG" style="width:90.0%" /></p>
+<h3 id="filter-out-all-countries-less-the-top-six">5.2.2 Filter Out all Countries, less the Top Six</h3>
+<p>Now that we know that Malaysia, China, US, Taiwan, Japan and Hong Kong are our top six countries with the highest trade value (import and export) for 2019 and 2020, we will filter out all other countries. To do so:</p>
+<ul>
+<li>Drag the Country (Import) into the <em>Filter</em> pane</li>
+<li>Click on <em>None</em> to deselect all countries</li>
+<li>Search for the six countries and manually check their boxes</li>
+<li>Ensure all 6 countries are selected</li>
+<li>Click OK</li>
+</ul>
+<p><img src="img/Steps/Filter%20Countries.PNG" style="width:90.0%" /></p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
 <!--radix_placeholder_article_footer-->
 <!--/radix_placeholder_article_footer-->
