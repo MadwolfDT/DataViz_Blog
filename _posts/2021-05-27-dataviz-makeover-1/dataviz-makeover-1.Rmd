@@ -221,12 +221,14 @@ Intuitively, a reader would read from left to right. Therefore, it would be *mor
 * Under Sort Order, choose *Descending*
 ![](img/Steps/Sort Year.PNG)
 
-#### Edit Title and Alias
+#### Edit Title, Alias and Colours
 There is a need to correctly label the title. To do so, double click on the *Total 6 Countries* and change it to **Top Six Countries**, based on Total Merchandise Import and Export Value for 2019 to 2020
 
 To edit the Y-Axis labels:
 
 * Right click on the label, and click on *Edit Alias*
+
+There is a need to adjust the colours, such that it is of a lighter tone, since numerous set of colours would be used against a white backdrop. Lighter tone of colours would be pleasing to the readers' eyes. To adjust the colours, go to the legend and select, *Edit Colors*.
 
 ### 5.3.3 Graph 1: Top Six Countries, based on Total Merchandise Import and Export Value for 2019 to 2020
 
@@ -271,7 +273,72 @@ Do the same for Export Worksheet. The final graphs for Import and Export should 
 
 ## 5.5 Creating a Visualisation Dashboard
 
-XXX
+### 5.5.1 Setting the Initial Layout
+In order to set the initial layout, do the following:
+
+* Drag the *Total 6 Countries* to the **upper half** of the dashboard
+* Drag the *Import* to the **lower half** of the dashboard
+* Drag the *Export* to the **lower half** of the dashboard, keeping it aligned to the right of Import
+
+The layout should look like this:
+
+![](img/Steps/Initial Dashboard.png)
+
+### 5.5.2 Adjusting the Dashboard Layout
+
+#### Size Fitting for Top 6 Countries GRaph
+
+The current layout requires the user to scroll the graph Since this is going to be a static visualisation and to avoid having the user to adjust the graph for better visualisation, we will size fit the graph accordingly. To do this:
+
+* Click on the graph
+* Click on the down arrow
+* Go to Fit, then choose Fit Height
+
+This will allow Tableau to fit the graph in accordance to the current height dimension. 
+
+![](img/Steps/Size Fit.png){width=50%}
+
+#### Adjust the legend for all Graphs
+
+Since both import/ export graphs bears the same colour representation for the countries, there is no need to have 2 legends. In addition, we can move the legend to the bottom of the dashboard. To do this:
+
+* Click on one of the legend and click on the 'X' button to remove the legend
+* Drag the remaining legend to the bottom of the page, and have it docked at the bottom.
+
+To maximise the width space for the graph, we could relocate the legend for *Top 6 Countries*. To do so:
+
+* Click on the legend for *Top 6 Countries*
+* Click on the down arrow
+* Click on Floating
+
+![](img/Steps/Floating Legend.png){width=50%}
+
+Adjust the legend to 'float' just above the x-axis. The final layout should look like the one below:
+
+![](img/Steps/Edited Dashboard.png)
+
+### 5.5.3 Enhancing the Dashboard
+
+To further enhance the dashboard to make it more intuitive for readers, we could include the graphical image of the countries. To do so:
+
+* Click on Floating at the objects pane
+* Double Click on Image
+* Choose the Image and click on 'OK'
+* To adjust the size of the image, on layout and adjust the size. We will use 30 pixels by 30 pixels
+* Adjust the location of the image that would allow the image to represent the country on the graph
+
+The layout should look like this:
+
+![](img/Steps/Add Country Image.png)
+
+Repeat the above steps to add the image for Malaysia. To ensure that the images are aligned and has consistent spacing between the images, it is important to use the Position X and Y for the image alignment. To do so:
+
+* Set the X Position to 155 pixel
+* Set the Y Position to increase by 35 pixels each time.
+
+![](img/Steps/China Settings.png){width=45%}  ![](img/Steps/Malaysia Settings.png){width=45%}
+
+*Repeat the steps* to include the images for the rest of the graphs.
 
 # 6. New Insights from the Improved Visualisation
 
