@@ -1,5 +1,22 @@
 [
   {
+    "path": "posts/2021-06-13-dataviz-makeover-2/",
+    "title": "DataViz Makeover 2",
+    "description": "A short description of the post.",
+    "author": [
+      {
+        "name": "Davmes Tan",
+        "url": "https://www.linkedin.com/in/davmestan/"
+      }
+    ],
+    "date": "2021-06-13",
+    "categories": [],
+    "contents": "\r\n\r\nContents\r\n1. Introduction\r\n\r\n1. Introduction\r\nMerchandise Trade data collated by the Department of Statistics Singapore, comprising of total imports/ exports since January 1976, is published on here. The data is segregated into various regions and countries.\r\n\r\n\r\n\r\n",
+    "preview": {},
+    "last_modified": "2021-06-13T17:57:13+08:00",
+    "input_file": {}
+  },
+  {
     "path": "posts/2021-05-27-dataviz-makeover-1/",
     "title": "DataViz Makeover 1",
     "description": "Top 6 countries based on total combined Merchandise Trade Imports/ Exports value between 2019 and 2020",
