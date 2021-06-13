@@ -1,0 +1,26 @@
+---
+title: "DataViz Makeover 2"
+description: |
+  A short description of the post.
+author:
+  - name: Davmes Tan
+    url: https://www.linkedin.com/in/davmestan/
+date: 06-13-2021
+output:
+  distill::distill_article:
+    toc: true
+    toc_depth: 2
+    self_contained: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# 1. Introduction
+
+
+Merchandise Trade data collated by the Department of Statistics Singapore, comprising of total imports/ exports since January 1976, is published on [here](https://www.singstat.gov.sg/find-data/search-by-theme/trade-and-investment/merchandise-trade/latest-data). The data is segregated into various regions and countries.
+
+
