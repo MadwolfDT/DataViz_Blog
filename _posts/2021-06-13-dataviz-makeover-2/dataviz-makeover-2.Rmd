@@ -56,4 +56,88 @@ The graph attempted to annotate the details of the trade markets' total trade vo
 
 
 ### 2.2.3 **Graph Layout**
-The graph had four components: (a) the visualisation graph; (b) definition of the graph; (c) legend; and (d) insight. While all four components were suggesting along the same topic on net trade surplus/deficit, the placement of the components and the visualisation of the graph was not intuitive for readers. For instance, the size of the bubble were premised on the net trade volume(summation of imports and exports). The legend was focusing on the net importer and exporter while the insights were referencing US and Mainland China. Therefore, the layout of the graph would need to be consistent and intuitive, so that the readers is able to understand the infographics intuitively, without much processing and cross-referncing.
+The graph had four components: (a) the visualisation graph; (b) definition of the graph; (c) legend; and (d) insight. While all four components were suggesting along the same topic on net trade surplus/deficit, the placement of the components and the visualisation of the graph was not intuitive for readers. For instance, the size of the bubble were premised on the net trade volume(summation of imports and exports). The legend was focusing on the net importer and exporter while the insights were referencing US and Mainland China. Therefore, the layout of the graph would need to be consistent and intuitive, so that the readers is able to understand the infographics intuitively, without much processing and cross-referencing.
+
+# 3. Proposing an Improved Visualisation
+With the above critiques, I would be suggesting an alternate graphical presentation to better present the data to a wider audience. The proposed layout of the improved visualisation is as stated below:
+
+# 4. The Improved Visualisation
+The improved visualisation would address all the critiques and provide visual enhancements. The improvements include:
+
+# 5. Step-by-Step Description on how the Improved Visualisation was prepared
+
+## 5.1 Data Preparation
+
+### 5.1.1 Getting Started with Tableau Prep Builder
+We could use Tableau Prep Builder to prepare and to clean the data. Do the following steps:
+
+* Open the Excel file
+![](img/prep.png)
+* Check on "Use Data Interpreter" to allow Tableau to best-interpret the excel worksheets.
+![](img/Data Interpreter.png)
+* Double click on T1 and T2, to load both worksheets. The final screen should look like this:
+![](img/import.png)
+
+### 5.1.2 Cleaning T1 and T2
+We will now commence to clean T1. Click on "View and clean data":
+![](img/viewnclean.png)
+Since we are looking at data from Jan 2011, we will proceed to delete all columns before Jan 2011. To do that, click on the column at "1976 Jan" and Shift+click "2010 Dec". This will select all the columns. Right click on any of the selected columns, and click on remove. Do the same for Jan 2021 to Apr 2021.
+![](img/delete.png)
+There is a need to pivot the table, such that the columns are now referred to as rows. To do that, select all the columns, less "Variables". Right click on any of the selected column and choose "Pivot Columns to Rows"
+![](img/pivot.png)
+Inside the worksheet, there is a row that indicates the Total Merchandise Imports. Similarly, there are collated information based on regional imports. To avoid repetitions but to keep regional information (Africa, Asia, Americas etc), choose "Total Merchandise Imports" and click on "exclude".
+![](img/excludetotal.png)
+The trading markets are currently listed with unnecessary information such as, "Thousand Dollars". To remove them, we could use Tableau Automatic Split function to trim the data. Right click on "Variables" and then choose "Split Values" -> "Automatic Split"
+![](img/split.png)
+With there, there is a series of adjustments that we need to make for T1:
+
+1. Rename "Variables - Split 1" to "Import Market"
+2. Remove "Variables - Split 2" column
+3. Rename Pivot1 Names to "Import Month"
+4. Change the format of Import Month from "String" to "Date"
+5. Rename Pivot1 Values to "Import Value"
+6. Remove "Variables" column
+
+![](img/T1edits.png)
+
+The final table for T1 should look like this:
+
+![](img/T1final.PNG)
+
+We will proceed to do similar steps for T2.
+
+The final screen should look like this:
+
+![](img/T1T2final.PNG)
+
+### 5.1.3 Creating Union between T1 and T2
+There is a need to create a union between T1 and T2. To do this, drag T1 Pivot into T2 Pivot and ensure that the word "join" is highlighted.
+
+![](img/join.png)
+
+Next, go to Settings, and join the following fields together:
+
+* Export Market = Import Market
+* Export Month = Import Month
+
+![](img/joinsettings.png)
+
+### 5.1.4 Saving the Cleaned Data into a new Worksheet
+
+Once the join is complete, we can export the file into Excel, to be used in Tableau. To do so, click on the 'plus' sign and choose Output.
+
+![](img/output.png)
+
+To create an output to Excel, do the following under the settings pane:
+
+1. Ensure "Microsoft Excel (.xlsx) is selected
+2. Browse and locate the original Excel file
+3. Type "prep" and click on "Create new worksheet "Prep"
+
+Once that is done, click on "Run Flow"
+
+![](img/saveOutput.PNG){width=50%}
+
+Now, a new worksheet has been created inside the original Excel file. We can proceed to use the worksheet to create the Visualisation inside Tableau.
+
+## 5.2 Building the Visualisation
