@@ -61,8 +61,20 @@ The graph had four components: (a) the visualisation graph; (b) definition of th
 # 3. Proposing an Improved Visualisation
 With the above critiques, I would be suggesting an alternate graphical presentation to better present the data to a wider audience. The proposed layout of the improved visualisation is as stated below:
 
+![](img/Sketch.jpg)
+
 # 4. The Improved Visualisation
-The improved visualisation would address all the critiques and provide visual enhancements. The improvements include:
+The improved visualisation would address all the critiques that were mentioned above. In addition, we would maintain the existing bubble plot, with the added enhancements:
+
+* The reader would be able to select the year of trade.
+* The size of the bubble will correspond with the trade market's net trade volume. For instance, if the trade market is a net importer, the net trade volume would reflect the net import value.
+* A dynamic tooltip would provide additional information of the selected trade market. It would display:
+
+  + Trade Year
+  + Trade Market
+  + Net Trade Volume
+  + Past Trade information from 2011 to 2020
+* The Top 10 Importers and Exporters would be display, to allow readers to how the trade markets had evolved over the years.
 
 # 5. Step-by-Step Description on how the Improved Visualisation was prepared
 
@@ -122,7 +134,15 @@ Next, go to Settings, and join the following fields together:
 
 ![](img/joinsettings.png)
 
-### 5.1.4 Saving the Cleaned Data into a new Worksheet
+### 5.1.4 Removing Repeated Columns
+Since Imported Market and Exported Market, and Imported Month and Exported Month are the same, we would delete one of the column, and rename them instead.
+
+* Rename **Import Month** to **Month**
+* Rename **Import Market** to **Market**
+* Remove **Export Month**
+* Remove **Export Market**
+
+### 5.1.5 Saving the Cleaned Data into a new Worksheet
 
 Once the join is complete, we can export the file into Excel, to be used in Tableau. To do so, click on the 'plus' sign and choose Output.
 
@@ -141,3 +161,305 @@ Once that is done, click on "Run Flow"
 Now, a new worksheet has been created inside the original Excel file. We can proceed to use the worksheet to create the Visualisation inside Tableau.
 
 ## 5.2 Building the Visualisation
+
+### 5.2.1 Creating Calculated Fields
+There is a need to create various calculated fields, so that we could calculated the following:
+
+* Total Trade Volume
+* Top Importer
+* Top Exporter
+* Net Trade
+
+To do so, go to the Data Pane, click on the down arrow and choose "Create Calculated Field"
+![](img/calculated.png){width=30%}
+
+* Creating **Total Trade** Calculated Field
+
+![](img/totaltrade.png){width=50.5%} 
+
+* Creating **Top Importers** Calculated Field
+
+![](img/topimporters.png){width=50%}
+
+* Creating **Top Exporters** Calculated Field
+
+![](img/topexporters.png){width=50%}
+
+* Creating **Absolute Net Trade** Calculated Field
+
+![](img/nettrade.png){width=50%}
+
+### 5.2.2 Creating Top 10 Importers Chart
+
+To create a graph plot, to list the top 10 Importers, we can do the following:
+
+* Drag **Top Importer** into the **Rows**
+* Drag **Market** into the **Columns**
+* Drag **Market** into the **Color**
+* Drag **Market** into the **Filters**
+* Right click on Filters -> Market and choose **Edit Filter**
+
+![](img/editfilter.png){width=30%}
+
+* Go to **Top** Tab
+* Choose **By Field**
+* Adjust the filter to select the Top 10 Importers
+
+![](img/top10.png){width=50%}
+
+Next we will go to the **Rows**, select **Market** and then click on **Sort**
+
+![](img/sort.png){width=50%}
+
+Adjust the following parameters:
+
+* Sort By: Field
+* Sort Order: Ascending
+* Field Name: Top Importer
+* Aggregation: Sum
+
+![](img/SortTop10.png){width=40%}
+
+After the adjustments, the chart should look something like this:
+
+![](img/Top10Importer.png)
+
+#### 5.2.2.1 Aesthetics
+
+We would proceed to improve the **aesthetics** of this chart. First, we can add the **Net Import Value** into the graph. To do so, we could do the following:
+
+* Drag **Importer** into **Label**
+* Right-Click on **SUM(Top Importer)** and click on **Format**
+* Under Format, adjust the following parameters:
+
+  + Under Font, choose size 10 and Bold
+  
+  ![](img/font.png){width=30%}
+  
+  + Under Alignment; (1) Horizontal-Centre; (2) Direction-Up; (3) Vertical-Top; and (4) Wrap-Automatic
+  
+  ![](img/Alignment.png){width=30%}
+  
+  + Under Numbers: (1) Numbers (Custom); (2) Decimal-0; (3) Display Units-Million (M); and Prefix-SGD
+  
+  ![](img/numbers.png){width=50%}
+
+The chart would then show the Top 10 Net Importers into Singapore, cumulated between 2011 and 2020, with **Italy at the 10th spot**. There is a need to know the total net import amount, as this would aid in subsequent building of the charts. To find out the total net import amount from the 10th trading market, right-click on Italy and click on *View Data*. The total net import value for Italy (10th Net Importer) is **41,314,586**
+
+![](img/italy.png){width=40%} ![](img/italyvalue.png){width=30%}
+  
+Next, we would add the **Year Filter** into the chart. To do so:
+
+* Drag **Month** into Filters
+* Select **Years** and click Next; Choose all the values listed inside
+
+![](img/years.png){width=30%}
+
+* Right-click on the dimension and click **Show Filter**
+
+![](img/showfilter.png){width=30%}
+
+* Right-click on the down-arrow at the filter and click **Single Value (list)**
+
+![](img/filtersetting.png){width=30%}
+
+* To allow readers to compare values between years, we will remove the (All) option. To do this, right-click on the down-arrow, select Customised and uncheck the **Show "All" Value**
+
+![](img/showall.png){width=30%}
+
+#### 5.2.2.2 Making Minor Adjustments
+
+**Adjustments of Trade Market Names**
+
+For some trade markets, they may be too long, for properly alignment subsequently. Therefore, we will adjust the following market names:
+
+* United States to US
+* United Arab Emirates to UAE
+* Germany, Federal Republic to Germany
+
+To do so, go to the name of the trade market, right-click and choose **Edit Alias**
+
+![](img/editalias.png){width=30%}
+
+#### 5.2.2.3 Creating Top 10 Exporter Chart
+
+With similar concepts from the creation of Top 10 Importer Chart, we can proceed to do a new Top 10 Exporter Chart. However do that:
+
+* Instead of Sorting it in Ascending Order, **Sort it in Desecnding Order** with the field **Top Exporter**.
+
+### 5.2.3 Bubble Plot for Net Trade
+
+To create the Net Trade Bubble Plot, we would do the following:
+
+* Drag the **Import Value** to **Rows**
+* Drag the **Export Value** to **Columns**
+* Drag the **Market** to **Color**
+  
+  + Go to **Condition**, choose **By Formula** and type the following:
+  + SUM([Top Importer]) >= 41314586 OR SUM([Top Exporter]) >= 41499315 
+  *this will tell Tableau that we are keen to select the Top 10 Importers and the Top 10 Exporters*
+  ![](img/marketformula.png){width=50%}
+  
+* Drag **Net Trade** to **Size**
+* Drag **Month** to Filter, choose **Year** and click Next, and Select all Values available.
+* Similarly, click on the **Year(Month)** down-arrow and click **Show Filter**
+
+![](img/showfilter2.png){width=30%}
+
+* Similarly, change the filter to radio buttons and disable the **Show "All" Values**
+
+The initial visualisation should look like this:
+
+![](img/initialvisualisation.png)
+
+#### 5.2.3.1 Adding a Diagonal Reference Line
+For the Net Trade Bubble Chart, it would be useful to add a diagonal line, such the anything towards the left of the line would suggest that it is an **Market Importer** while anything that is towards the right of the line would suggest that it is an **Market Exporter**
+
+Since Tableau does not have a function to add a diagonal reference line, we would attempt to use **Trending LIne** to server as a reference line. To do that, we would do the following:
+
+* Go to **Analysis** and then switch off **Aggregate Measures**. This will allow Tableau to show all data points, instead of aggregating them.
+* Create a **Calculated Field** and rename it as **Diagonal Reference Line**. Inside the field, add **[Export Values]** into it.
+* Drag **Market** into Detail and **Import Value** into **Color**
+* Drag **DIagonal Reference Line** into **Rows**, placing it next to **Import Value**
+
+![](img/RefLine.png){width=50%}
+
+* Click **Diagonal Reference Line** and click on **Dual Axis**
+
+![](img/RefLine2.png){width=50%}
+
+* Right-Click on **Diagonal Reference Line Axis** and choose **Synchronise Axis**
+
+![](img/RefLine3.png)
+
+* Go to **SUM(Diagonal Reference Line)** pane, click on **Automatic** and change to **Line**
+* Go to one of the lower point, along the plot, right-click, and go to **Trend Lines**, **Show Trend Lines**
+
+![](img/RefLine4.png){width=90%}
+
+* Click on **Color** and reduce the opacity to 0%.
+* Right click on the **Diagonal Reference Line** axis and switch off **Show Header**
+* Click on the **Trend Line**, and click **Edit**
+* Uncheck on the box **Show tooltips**
+
+![](img/RefLine5.png){width=30%} ![](img/RefLine6.png){width=40%}
+
+* Synchronise both axes by providing fixed ranges
+
+  + Fixed Start: -5000000
+  + Fixed End: 75000000
+  
+* Go to **SUM(Import Value)** pane, remove **SUM(Import Value)** from **Color** and replace it with **Market**
+* Go to **Analysis** and switch on **Aggregated Measures** again. The final screen should look like this.
+
+![](img/RefLine7.png)
+
+#### 5.2.3.2 Improving the Aesthesics of Net Trade Bubble Chart
+
+A couple of things could be adjusted to make the Bubble Chart more readable and intuitive.
+
+* Change the **Automatic** parameter to a **Circle** parameter
+* Adjust the size of the **circle** to about 75%
+* Adding **Market** into the labelling, and adjust the labelling to be on top of the bubble
+
+#### 5.2.3.3 Adding Flags to be used as Bubble Chart
+
+To add flags to be presented onto the Bubble Chart, there is a need to download and create a repository for the flags. To download the flags, we could go to [Flaticon](https://www.flaticon.com/). After which, go to Tableau default folder and create a **Flags** folder. This folder would be used to save all the flags.
+
+
+![](img/flags.png){width=30%}
+
+Next, do the following:
+
+* Change from the existing Circles to Shapes
+* Drag **Market** into Shape
+* Right-Click on the Market Legend and choose **Edit Shapes**
+
+![](img/EditShapes.png){width=30%}
+
+* Click on **Reload Shapes**
+
+![](img/reload.png){width=30%}
+
+* We should see the Flags category, and assign the flags accordingly.
+
+![](img/flagsgroup.png){width=30%}
+
+The final product should look like this:
+
+![](img/flagbubble.png)
+
+#### 5.2.3.4 Enhancing Bubble Plot Tooltip
+
+We would attempt to include  an Import and Export graph, over the past 10 years, to allow users to view the historical data. To do that:
+
+* Create a **new worksheet** and name it as **Import and Export**.
+* Drag **Month** to **Columns** and choose **Year**
+* Drag **Import Value** to Rows and **Export Value** to the right of the graph.
+
+The graph should look likle this:
+
+![](img/importexport.png){width=50%}
+
+* Synchronise both axes
+
+![](img/synchronise.png){width=30%}
+
+* Resize the chart, and ensure the axes colours are themed in accordance to the colour of the line. The size of the chat should look like this:
+
+![](img/importexport2.png)
+
+* Go back to **Net Trade** worksheet and adjust the tooltip by clicking **Insert** -> **Sheets** -> **Import and Export**. Adjust the maxwidth to 500.
+
+![](img/insert.png){width=60%} ![](img/tooltiptext.png)
+  
+The final tooltip should look this:
+
+![](img/tooltip.png){width=50%}
+
+### 5.2.4 Creating a new Dashboard
+
+Before the dragging of any worksheets into the dashboard, it is important to ensure that the size of the dashboard is set to **automatic**. To create an interactive dashboard, we would drag the following 3 worksheets into the dashboard"
+
+* Top 10 Importer
+* Top 10 Exporter
+* Net Trade
+
+Create a new title and label it as **Singapore's Trading Partners (Import/ Export) for 2011 to 2020**.
+
+To allow the respective market to be highlighted, when any trade market is selected at the Bubble Plot, do the following:
+
+* Go to **Dashboard** and click on **Actions**
+
+![](img/actions.png){width=30%}
+
+* Click on **Add Action** and choose **Highlight**
+
+![](img/highlight.png){width=30%}
+
+* Key in the following:
+
+  + Click on **Select**
+  + Under Source Sheets, select **Net Trade** only
+  + Under Target Sheets, select **Top 10 Exporter** and **Top 10 Importer**
+  
+![](img/highlightaction.png){width=50%}
+
+Now, whenever any trade market is selected on the Bubble Chart, the respective Import/Export chart would be highlighted, with the selected market.
+
+*Adding Animation*
+
+Since the reader is able to select between the year of data, it would be useful to add animation to allow the reader to visualise the changes over the years. To do so:
+
+* Go to **Format** -> **Animations**
+* Switch it **On** and set duration **1.00 seconds (Flow)**
+
+![](img/animation.png){width=30%}
+
+The final dashboard would look like this:
+
+![](img/DashboardFinal.jpg)
+
+The interactive version could be found [here](https://public.tableau.com/app/profile/davmes.tan/viz/DataViz2a/Dashboard1)
+
+# 6. New Insights from the Improved Visualisation
