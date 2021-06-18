@@ -466,7 +466,7 @@ The interactive version could be found [here](https://public.tableau.com/app/pro
 
 **US, from a Net Importer, into a Net Exporter**
 
-In 2011, Saudi Arabia was Singapore's joint Top Importer with US, having a net import trade of about SGD 21 million. However, from 2018 onwards, US commenced on a downward decline and in 2020, US, from being our Top Net Importer between 2011 and 2017, became our Net Exporter, having a deficit of SGD 6 million. A possible explanation for this was that Donald Trump was elected as the President of the United Stated in 2017, with the inauguration on Jan 2018. Donald Trump implemented a series of trade barriers and the trade war between US and China, may have affect the market between Singapore and US.
+In 2011, Saudi Arabia was Singapore's joint Top Importer with US, having a net import trade of about SGD 21 million. However, from 2018 onwards, US commenced on a downward decline and in 2020, US, from being our Top Net Importer between 2011 and 2017, became our Net Exporter, having a trade surplus of SGD 6 million. A possible explanation for this was that Donald Trump was elected as the President of the United States in 2017, with the inauguration on Jan 2018. He then went on to implement a series of trade barriers and having the trade war intensifying between US and China, it may have affect the market between Singapore and US.
 
 **Trade Deficit with Hong Kong for the past 10 years**
 
