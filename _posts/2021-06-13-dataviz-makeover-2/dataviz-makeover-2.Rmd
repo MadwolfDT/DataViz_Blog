@@ -463,3 +463,15 @@ The final dashboard would look like this:
 The interactive version could be found [here](https://public.tableau.com/app/profile/davmes.tan/viz/DataViz2a/Dashboard1)
 
 # 6. New Insights from the Improved Visualisation
+
+**US, from a Net Importer, into a Net Exporter**
+
+In 2011, Saudi Arabia was Singapore's joint Top Importer with US, having a net import trade of about SGD 21 million. However, from 2018 onwards, US commenced on a downward decline and in 2020, US, from being our Top Net Importer between 2011 and 2017, became our Net Exporter, having a deficit of SGD 6 million. A possible explanation for this was that Donald Trump was elected as the President of the United Stated in 2017, with the inauguration on Jan 2018. Donald Trump implemented a series of trade barriers and the trade war between US and China, may have affect the market between Singapore and US.
+
+**Trade Deficit with Hong Kong for the past 10 years**
+
+For the past 10 years, Singapore has a trade deficit with Hong Kong in the ranges of SGD 50 million per year. That means that Singapore had exported out much more merchandise to Hong Kong, than we import from them. Transshipment between countries, transiting at Hong Kong, could be a reason for the constant high trade deficit, since the population of Hong Kong is not that big to be consuming so much merchandises.
+
+**Malaysia, from a New Exporter, into a Net Importer**
+
+Since 2011, Malaysia had been Singapore's Net Exporter. However, from 2019, our exports to Malaysia started to dip, with the sharpest decline in 2020. That could be attributed to Covid-19 where Malaysia imposed a series of control order such as Movement Control Order (MCO), COnditional Movement Control Order and Recovery COntrol Order. The trade routes between Singapore and Malaysia premised on the 2 causeways between both countries. Therefore, with a series of control order in Malaysia, the export value dropped tremendously in 2020, resulting in an overall trade deficit of SGD 11 million.
