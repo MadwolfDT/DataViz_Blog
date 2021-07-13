@@ -2,7 +2,7 @@
   {
     "path": "posts/2021-07-13-assignment-1/",
     "title": "Assignment 1",
-    "description": "A short description of the post.",
+    "description": "VAST Challenge 2021",
     "author": [
       {
         "name": "Davmes Tan",
@@ -11,9 +11,9 @@
     ],
     "date": "2021-07-13",
     "categories": [],
-    "contents": "\r\nDistill is a publication format for scientific and technical writing, native to the web.\r\nLearn more about using Distill at https://rstudio.github.io/distill.\r\n\r\n\r\n\r\n",
+    "contents": "\r\n\r\n\r\n\r\n",
     "preview": {},
-    "last_modified": "2021-07-13T14:07:49+08:00",
+    "last_modified": "2021-07-13T14:10:33+08:00",
     "input_file": "assignment-1.knit.md"
   },
   {
