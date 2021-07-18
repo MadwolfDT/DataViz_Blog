@@ -379,6 +379,36 @@ p1a
 p2a
 ```
 
+### 3.3.1 Weekdays
+
+It was observed that a number of locations do not encounter a relatively higher peak throughout the day, except for the following locations:
+
+During Breakfast (0730hrs to 0830hrs):
+
++ Brew've Been Served
++ Hallowed Grounds
+
+During Dinner (1930hrs to 2030hrs)
+
++ Guy's Gyros
++ Hippokampos
++ Katrina's Cafe
+
+### 3.3.2 Weekends
+
+During Lunch (1330hrs to 1430hrs)
+
++ Hippokampos
++ Kalami Kafenion
+
+During Dinner (1930hrs to 2030hrs)
+
++ Guy Gyros
++ Hippokampos *(1830hrs to 2130hrs)*
++ Katrina's Cafe *(1930hrs to 2130hrs)*
+
+Unlike Guy Gyros, Jippolampos and Katrina's Cafe have longer periods of higher transaction volume.
+
 ```{r Finding missing location, include=FALSE}
 
 num_locations <- cc_data %>%
