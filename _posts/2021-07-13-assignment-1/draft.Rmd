@@ -214,4 +214,33 @@ g$widths <- unit.pmax(g1$widths, g2$widths)
 #grid.draw(g)
 
 ```
+
+```{r q2}
+#have a count on the popular places
+locations_gps <- locations_gps %>%
+  group_by(lat, long) %>%
+  add_count(lat, long, name = "count")
+
+#discard unnecessary information
+locations_gps <- locations_gps %>%
+  select(-c(Timestamp, id)) %>%
+  distinct(lat, long, count)
+
+#Attempt to filter out locations with more than 100
+pop_location_gps <- locations_gps %>%
+  filter(count >= 50)
+
+tif_sf <- st_as_sf(pop_location_gps, 
+                   coords = c("long", "lat"), 
+                   crs = 4326)
+tmap_mode("plot")
+
+tm <- tm_shape(bgmap) + 
+ tm_rgb(bgmap, r = 1, g = 2, b = 3,
+         alpha = NA,
+         saturation = 1,
+         interpolate = TRUE,
+         max.value = 255) +
+tm_shape(tif_sf) + 
+  tm_dots()
 ```

@@ -559,7 +559,11 @@ suspicious_txn1 %>%
   kable_styling()
 ```
 
-```{r Analysing GPS data, eval=FALSE, include=FALSE}
+# 4. Question 1 - Adding GPS and Vehicle Data into the Analysis
+
+With the gps data, which comes with 5-decimal points for the lat/long co-ordinates, I attempted to round it off to 4 decimal points, to get an accuracy of only 11.1metres, so that I could do a count on popular co-ordinates that was frequented. Knowing that GPS communication would be continuous, it would be good to investigate the time lag between data to data.
+
+```{r Analysing GPS data, include=FALSE}
 
 #Preparing the map
 bgmap <- raster("data/Geospatial/MC2-tourist.tif")
@@ -582,6 +586,10 @@ Abila_st <- st_read(dsn = "data/Geospatial",
 
 gps <- read_csv("data/gps.csv")
 
+gps$Timestamp <- date_time_parse(gps$Timestamp,
+                                 zone = "",
+                                 format = "%m/%d/%Y %H:%M:%S")
+
 #Discover top locations recorded
 locations_gps <- gps 
 
@@ -589,46 +597,90 @@ locations_gps <- gps
 locations_gps$lat <- round(locations_gps$lat, digits = 4)
 locations_gps$long <- round(locations_gps$long, digits = 4)
 
-#have a count on the popular places
-locations_gps <- locations_gps %>%
-  group_by(lat, long) %>%
-  add_count(lat, long, name = "count")
+gps_lag <- gps %>%
+  group_by(id) %>%
+  mutate(timelag = lead(Timestamp, order_by = id)) %>%
+  mutate(lag = timelag - Timestamp)
 
-#discard unnecessary information
-locations_gps <- locations_gps %>%
-  select(-c(Timestamp, id)) %>%
-  distinct(lat, long, count)
+y_pp <- format_format(big.mark = "",
+                      decimal.mark = ",",
+                      scientific = FALSE)
 
-#Attempt to filter out locations with more than 100
-pop_location_gps <- locations_gps %>%
-  filter(count >= 50)
+gps_lag_plot <- ggplot(gps_lag, aes(factor(id), lag)) + 
+  labs(x = "ID", y = "Time Lag", title = "GPS Lag Interval") +
+  scale_y_continuous(labels = y_pp) + 
+  geom_boxplot_interactive(aes(tooltip = Timestamp),
+                           stackgroups = TRUE) + 
+  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1.1, hjust = 1.1),
+        axis.text.y = element_text(size = 7),
+        plot.title = element_text(hjust = 0.5))
 
-tif_sf <- st_as_sf(pop_location_gps, 
-                   coords = c("long", "lat"), 
-                   crs = 4326)
-tmap_mode("plot")
+#adjust to 10s
+adj_gps_lag <- gps_lag %>%
+  filter(lag <= 5)
 
-tm <- tm_shape(bgmap) + 
- tm_rgb(bgmap, r = 1, g = 2, b = 3,
-         alpha = NA,
-         saturation = 1,
-         interpolate = TRUE,
-         max.value = 255) +
-tm_shape(tif_sf) + 
-  tm_dots()
+adj_gps_lag_plot <- ggplot(adj_gps_lag, aes(factor(id), lag)) + 
+  labs(x = "ID", y = "Time Lag", title = "GPS Lag Interval") +
+  scale_y_continuous(labels = y_pp) + 
+  geom_boxplot_interactive(aes(tooltip = Timestamp),
+                           stackgroups = TRUE) + 
+  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1.1, hjust = 1.1),
+        axis.text.y = element_text(size = 7),
+        plot.title = element_text(hjust = 0.5))
+```
+
+```{r actual gps lag, echo=FALSE}
+gps_lag_plot
+```
+
+## 4.1 Investigating GPS Time Lag
+
+From the boxplot, we could see that there are numerous outliers, such that the actual boxplot is too small to be seen. There are reasons as to why the lag between data is large. The reasons, included but not limited to:
+
++ The car was parked for a long period of time. Thus, the current to power the GPS could be cut off to prevent the vehicle battery from draining out completely. 
+
++ GPS is malfunctioning
+
++ It is programmed not to store any locations if GPS signal is weak.
+
++ Tampering of GPS
+
+Since we are more interested to infer the GPS data to Point of Interests, we would adjust the data such that we can filter out outliers.
+
+```{r adjusted gps lag, echo=FALSE}
+adj_gps_lag_plot
+```
+From the adjusted GPS Lag Interval chart, we know that GPS would usually store its location with an interval of 1 to 2 seconds.
+
+## 4.2 Establishing Point Of Interests (POI)
+
+For this set of raw data, it would be useful to establish a set of coordinates that could be inferred to POIs on the map. To do so, I would examine every set of GPS data and compare it to its location **3 mins later**. If its coordinates are the same, the assumption would be that the vehicle is parked at a location which may be inferred to as POI. And for the identification of POIs, we do not need a set of GPS coordinates that is highly accurate. As such, we would use a set of GPS coordinates that is accurate to the nearest 11.1m.
+
+```{r Identify POI, include=FALSE}
+
+POI_gps <- locations_gps %>%
+  group_by(id) %>%
+  mutate(delay3 = Timestamp + 60*3)
+
+head(locations_gps)
+
+#searchGPS(POI_gps$Timestamp, POI_gps$id, POI_gps$lat, POI_gps$long)
+
+searchGPS <- function(gpsTime, vehID, current.lat, current.long){
+
+  x <- POI_gps %>%
+    filter(id == vehID &
+             Timestamp == (gpsTime + 60*3))
+  
+  #y <- c(format(x$lat[1], 4), format(x$long[1], 4))
+  #return(y)
+  ifelse(dim(x), return(FALSE),
+         ifelse((x$lat[1] == current.lat & x$long[1] == current.long), return(TRUE), return(FALSE)))
+  
+}
 
 
 ```
-
-# 4. Adding vehicle data analysis into the data
-
-With the gps data, which comes with 5-decimal points for the lat/long co-ordinates, I attempted to round it off to 4 decimal points, to get an accuracy of only 11.1metres, so that I could do a count on popular co-ordinates that was frequented. After examining the extracted data, I have decided to plot the map for those coordinates that have 50 counts and above and 100 counts and above.
-
-![](img/Popular50.png)
-
-![](img/Popular100.png)
-
-
 
 ```{r print individual routes, eval=FALSE, include=FALSE}
 
