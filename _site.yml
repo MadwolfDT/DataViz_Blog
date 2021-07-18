@@ -1,7 +1,7 @@
 name: "DataViz_Blog"
-title: "DataViz Makeover"
+title: "Visual Analytics"
 description: |
-  DataViz Makeover
+  Visual Analytics
 output_dir: "_site"
 navbar:
   right:
