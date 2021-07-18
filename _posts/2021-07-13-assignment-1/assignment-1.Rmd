@@ -531,7 +531,7 @@ girafe(
 
 Another two transactions of $600 from Chostus Hotel and $477.60 from General Grocer could be suspicious anomalies.
 
-```{r Details of Suspicious anomalies}
+```{r Details of Suspicious anomalies, include=FALSE}
 
 suspicious_txn <- cc_data %>%
   filter(price == 4277.40 |
