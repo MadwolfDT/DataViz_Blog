@@ -659,28 +659,38 @@ For this set of raw data, it would be useful to establish a set of coordinates t
 ```{r Identify POI, include=FALSE}
 
 POI_gps <- locations_gps %>%
+  mutate(min3 = Timestamp + 180) %>%
   group_by(id) %>%
-  mutate(delay3 = Timestamp + 60*3)
+  mutate(stay = if_else(min3 <= lag(min3) & lat == lag(lat) & long == lag(long), TRUE, FALSE)) %>% 
+  ungroup() %>%
+  filter(stay == TRUE) %>%
+  distinct(lat, long)
 
-head(locations_gps)
+#ploting out the locations
+tif_sf <- st_as_sf(POI_gps, 
+                   coords = c("long", "lat"), 
+                   crs = 4326)
 
-#searchGPS(POI_gps$Timestamp, POI_gps$id, POI_gps$lat, POI_gps$long)
+tmPOI <- tm_shape(bgmap) + 
+ tm_rgb(bgmap, r = 1, g = 2, b = 3,
+         alpha = 0.5,
+         saturation = 1,
+         interpolate = TRUE,
+         max.value = 255) +
+  tm_shape(tif_sf) + 
+  tm_dots(size = 0.25,
+          alpha = 0.5,
+          col = "red")
 
-searchGPS <- function(gpsTime, vehID, current.lat, current.long){
-
-  x <- POI_gps %>%
-    filter(id == vehID &
-             Timestamp == (gpsTime + 60*3))
-  
-  #y <- c(format(x$lat[1], 4), format(x$long[1], 4))
-  #return(y)
-  ifelse(dim(x), return(FALSE),
-         ifelse((x$lat[1] == current.lat & x$long[1] == current.long), return(TRUE), return(FALSE)))
-  
-}
-
+#svl <- "filename.png"
+#tmap_save(tmPOI, svl)
 
 ```
+
+```{r print POI, echo=FALSE}
+tmPOI
+```
+
 
 ```{r print individual routes, eval=FALSE, include=FALSE}
 
