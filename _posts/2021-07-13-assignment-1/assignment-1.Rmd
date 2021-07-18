@@ -27,7 +27,8 @@ packages = c('raster', 'sf',
              'forcats', 'scales',
              'arules', 'gtable',
              'grid', 'gridExtra',
-             'chron', 'lubridate')
+             'chron', 'lubridate',
+             'kableExtra')
 
 for(p in packages){
   if(!require(p, character.only = T)){
@@ -105,7 +106,6 @@ loyalty_data2 <- loyalty_data %>%
 loyalty_data <- loyalty_data2
 
 ```
-
 
 ```{r Heatmap for CC, include=FALSE}
 
@@ -428,7 +428,136 @@ missinglocation <- rbind(num_locations, num_locations1) %>%
 
 ## 3.4 Anomalies in the data
 
+### 3.4.1 Missing Location
+
 It was noticed that there are 34 distinct locations in the credit card transactions and 33 distinct locations in the loyalty card transactions. A quick comparison was made, and it was noticed that **Daily Dealz** was not inside the loyalty card transaction. An inference could be that the location does not provide any benefits for the usage of GASTech loyalty card.
+
+```{r transaction plot, include=FALSE}
+
+txn_cc_plot <- ggplot(cc_data, aes(location, price)) + 
+  labs(x = "Locations", y = "Price", title = "Transaction Amount by Credit Card") +
+  geom_boxplot_interactive(aes(tooltip = price),
+                           stackgroups = TRUE) + 
+  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1.1, hjust = 1.1),
+        axis.text.y = element_text(size = 7),
+        plot.title = element_text(hjust = 0.5))
+
+txn_loy_plot <- ggplot(loyalty_data, aes(location, price)) + 
+  labs(x = "Locations", y = "Price", title = "Transaction Amount by Loyalty Card") +
+  geom_boxplot_interactive(aes(tooltip = price),
+                           stackgroups = TRUE) + 
+  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1.1, hjust = 1.1),
+        axis.text.y = element_text(size = 7),
+        plot.title = element_text(hjust = 0.5))
+
+less_txn_cc_plot <- cc_data %>%
+  filter(location != "Abila Airport" &
+           location != "Abila Scrapyard" &
+           location != "Albert's Fine Clothing" &
+           location != "Carlyle Chemical Inc." &
+           location != "Frydos Autosupply n' More" &
+           location != "Kronos Pipe and Irrigation" &
+           location != "Maximum Iron and Steel" &
+           location != "Nationwide Refinery" &
+           location != "Stewart and Sons Fabrication")
+
+less_txn_cc_plot <- ggplot(less_txn_cc_plot, aes(location, price)) + 
+  labs(x = "Locations", y = "Price", title = "Transaction Amount by Credit Card") +
+  geom_boxplot_interactive(aes(tooltip = price),
+                           stackgroups = TRUE) + 
+  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1.1, hjust = 1.1),
+        axis.text.y = element_text(size = 7),
+        plot.title = element_text(hjust = 0.5))
+
+less_txn_loy_plot <- loyalty_data %>%
+  filter(location != "Abila Airport" &
+           location != "Abila Scrapyard" &
+           location != "Albert's Fine Clothing" &
+           location != "Carlyle Chemical Inc." &
+           location != "Frydos Autosupply n' More" &
+           location != "Kronos Pipe and Irrigation" &
+           location != "Maximum Iron and Steel" &
+           location != "Nationwide Refinery" &
+           location != "Stewart and Sons Fabrication")
+
+less_txn_loy_plot <- ggplot(less_txn_loy_plot, aes(location, price)) + 
+  labs(x = "Locations", y = "Price", title = "Transaction Amount by Credit Card") +
+  geom_boxplot_interactive(aes(tooltip = price),
+                           stackgroups = TRUE) + 
+  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1.1, hjust = 1.1),
+        axis.text.y = element_text(size = 7),
+        plot.title = element_text(hjust = 0.5))
+
+```
+
+### 3.4.2 Transaction Anomalies
+
+```{r txn_cc_plot, echo=FALSE}
+girafe(
+  ggobj = txn_cc_plot,
+  width_svg = 6,
+  height_svg = 6*0.618)
+```
+
+```{r txn_loy_plot, echo=FALSE}
+girafe(
+  ggobj = txn_loy_plot,
+  width_svg = 6,
+  height_svg = 6*0.618)
+```
+
+There are a series of transaction amount suspicious anomalies.
+
++ $4,277.40 at Abila Scrapyard
++ $1,239.41 at Albert's Fine Clothing
++ $10,000 at Frydos Autosupply
++ $4742.67, $4,513.16 and $4,429.76 Nationwide Refinery
+
+I will attempt to filter out the locations with high-paying transactions, to further observe if there are any more suspicious anomalies.
+
+```{r less_txn_cc_plot, echo=FALSE}
+girafe(
+  ggobj = less_txn_cc_plot,
+  width_svg = 6,
+  height_svg = 6*0.618)
+```
+
+```{r less_txn_loy_plot, echo=FALSE}
+girafe(
+  ggobj = less_txn_loy_plot,
+  width_svg = 6,
+  height_svg = 6*0.618)
+```
+
+Another two transactions of $600 from Chostus Hotel and $477.60 from General Grocer could be suspicious anomalies.
+
+```{r Details of Suspicious anomalies}
+
+suspicious_txn <- cc_data %>%
+  filter(price == 4277.40 |
+           price == 1239.41 |
+           price == 10000 |
+           price == 4429.76 |
+           price == 4742.67 |
+           price == 4513.16 |
+           price == 600)
+
+suspicious_txn1 <- loyalty_data %>%
+  filter(price == 477.6)
+
+```
+
+The details of the suspicious transactions are as follows:
+
+```{r print suspicious txn, echo=FALSE}
+suspicious_txn %>%
+  kbl() %>%
+  kable_styling()
+
+suspicious_txn1 %>%
+  kbl() %>%
+  kable_styling()
+```
 
 ```{r Analysing GPS data, eval=FALSE, include=FALSE}
 
