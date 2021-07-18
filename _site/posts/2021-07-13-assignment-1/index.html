@@ -2121,10 +2121,11 @@ document.addEventListener('DOMContentLoaded', function() {
 </ul>
 <p>There were a few issues that was needed to be resolved in both csv files.</p>
 <ul>
-<li>There is a need to convert the timestamp of both files into a <em>dttm</em> format</li>
-<li>There are unrecognised characters within the <em>location</em> variable. Thus, I would convert it into a UTF-8 readable format.</li>
+<li>There is a need to convert the timestamp of all files into a <em>dttm</em> format</li>
+<li>For <strong>cc_data.csv</strong> and <strong>loyalty_data.csv</strong> there are unrecognised characters within the <em>location</em> variable. Thus, I would convert it into a UTF-8 readable format.</li>
 </ul>
-<h1 id="most-popular-locations-and-when-are-they-popular">3. Most Popular Locations and When are they Popular?</h1>
+<h1 id="question-1---analysing-credit-card-and-loyalty-card-data">3. Question 1 - Analysing Credit Card and Loyalty Card Data</h1>
+<h2 id="popular-locations-during-the-weekdays">3.1 Popular Locations during the Weekdays</h2>
 <div class="layout-chunk" data-layout="l-body">
 <p><img src="assignment-1_files/figure-html5/Plot%203-1.png" width="624" /></p>
 </div>
@@ -2149,6 +2150,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="layout-chunk" data-layout="l-body">
 <p><img src="assignment-1_files/figure-html5/Plot%206-1.png" width="624" /></p>
 </div>
+<h2 id="popular-locations-during-the-weekends">3.2 Popular Locations during the Weekends</h2>
 <p>During <strong>weekends</strong>, the the popular locations are:</p>
 <ul>
 <li>Guy’s Gyros</li>
@@ -2158,6 +2160,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <li>Ouzeri Elian</li>
 </ul>
 <p>Similarly, observations were consistent on both set of data in credit card and loyalty card transactions.</p>
+<h2 id="periods-of-high-transactional-volume-at-popular-locations">3.3 Periods of high transactional volume at popular locations</h2>
 <p>To discover the popular periods for the locations, we could only use credit card transactions, since the timestap has a time element to it. This is what we discovered:</p>
 <div class="layout-chunk" data-layout="l-body">
 <p><img src="assignment-1_files/figure-html5/Plot%201-1.png" width="624" /></p>
@@ -2165,7 +2168,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="layout-chunk" data-layout="l-body">
 <p><img src="assignment-1_files/figure-html5/Plot%202-1.png" width="624" /></p>
 </div>
-<h2 id="anomalies-in-the-data">3.1 Anomalies in the data</h2>
+<h2 id="anomalies-in-the-data">3.4 Anomalies in the data</h2>
 <p>It was noticed that there are 34 distinct locations in the credit card transactions and 33 distinct locations in the loyalty card transactions. A quick comparison was made, and it was noticed that <strong>Daily Dealz</strong> was not inside the loyalty card transaction. An inference could be that the location does not provide any benefits for the usage of GASTech loyalty card.</p>
 <h1 id="adding-vehicle-data-analysis-into-the-data">4. Adding vehicle data analysis into the data</h1>
 <p>With the gps data, which comes with 5-decimal points for the lat/long co-ordinates, I attempted to round it off to 4 decimal points, to get an accuracy of only 11.1metres, so that I could do a count on popular co-ordinates that was frequented. After examining the extracted data, I have decided to plot the map for those coordinates that have 50 counts and above and 100 counts and above.</p>

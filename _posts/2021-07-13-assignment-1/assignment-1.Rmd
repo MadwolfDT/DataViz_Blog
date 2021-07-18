@@ -73,8 +73,8 @@ There are a total of 3 csv files provided for MC 2. They are:
 
 There were a few issues that was needed to be resolved in both csv files.
 
-+ There is a need to convert the timestamp of both files into a *dttm* format
-+ There are unrecognised characters within the *location* variable. Thus, I would convert it into a UTF-8 readable format.
++ There is a need to convert the timestamp of all files into a *dttm* format
++ For **cc_data.csv** and **loyalty_data.csv** there are unrecognised characters within the *location* variable. Thus, I would convert it into a UTF-8 readable format.
 
 ```{r data_prep_1, include=FALSE}
 
@@ -322,7 +322,9 @@ p6 <- ggplot(heatmap_loy_weekend,
 #ggsave(svl)
 
 ```
-# 3. Most Popular Locations and When are they Popular?
+# 3. Question 1 - Analysing Credit Card and Loyalty Card Data
+
+## 3.1 Popular Locations during the Weekdays
 
 ```{r Plot 3, echo=FALSE}
 p3
@@ -353,6 +355,8 @@ p4
 p6
 ```
 
+## 3.2 Popular Locations during the Weekends
+
 During **weekends**, the the popular locations are:
 
 + Guy's Gyros
@@ -362,6 +366,8 @@ During **weekends**, the the popular locations are:
 + Ouzeri Elian
 
 Similarly, observations were consistent on both set of data in credit card and loyalty card transactions.
+
+## 3.3 Periods of high transactional volume at popular locations
 
 To discover the popular periods for the locations, we could only use credit card transactions, since the timestap has a time element to it. This is what we discovered:
 
@@ -390,7 +396,7 @@ missinglocation <- rbind(num_locations, num_locations1) %>%
 
 ```
 
-## 3.1 Anomalies in the data
+## 3.4 Anomalies in the data
 
 It was noticed that there are 34 distinct locations in the credit card transactions and 33 distinct locations in the loyalty card transactions. A quick comparison was made, and it was noticed that **Daily Dealz** was not inside the loyalty card transaction. An inference could be that the location does not provide any benefits for the usage of GASTech loyalty card.
 
