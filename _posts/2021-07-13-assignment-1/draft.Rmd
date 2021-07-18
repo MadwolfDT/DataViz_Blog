@@ -1,0 +1,217 @@
+---
+title: "Assignment 1"
+description: |
+  VAST Challenge 2021
+author:
+  - name: Davmes Tan
+    url: https://www.linkedin.com/in/davmestan/
+date: 07-13-2021
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, error = FALSE)
+```
+
+```{r packages}
+
+packages = c('raster', 'sf',
+             'clock', 'tidyverse', 
+             'tmap', 'rgdal',
+             'dplyr', 'ggplot2',
+             'ggiraph', 'DT',
+             'plotly', 'crosstalk')
+
+for(p in packages){
+  if(!require(p, character.only = T)){
+    install.packages(p)
+  }
+  library(p, character.only = T)
+
+}
+
+```
+
+```{r old q1 plot}
+
+cc_plot <- ggplot(cc_data) + 
+  geom_histogram_interactive(aes(fct_infreq(location),
+                                 stackgroups = TRUE,
+                                 binwidth = 1),
+                             fill = "orange",
+                             stat = "count") +
+  geom_text(aes(location, label=after_stat(count)),
+            stat = 'count',
+            position = position_dodge(width = 0.9), 
+            size=2.5, 
+            vjust = -1) + 
+  ylim(0,230) + 
+  labs(x = "Locations", y = "Number of Txn", title = "Visits based on Credit Card Transactions") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+loyalty_plot <- ggplot(loyalty_data) + 
+  geom_histogram_interactive(aes(fct_infreq(location),
+                                 stackgroups = TRUE,
+                                 binwidth = 1),
+                             fill = "blue",
+                             stat = "count") +
+  geom_text(aes(location, label=after_stat(count)),
+            stat = 'count',
+            position = position_dodge(width = 0.9), 
+            size=2.5, 
+            vjust = -1) + 
+  ylim(0,230) + 
+  labs(x = "Locations", y = "Number of Txn", title = "Visits based on Loyalty Card Transactions") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+time_cc_data <- cc_data %>%
+  mutate(time = format(timestamp, format = "%H:%M"))
+
+#time_cc_data$time <- date_time_parse(time_cc_data$time,
+#                                     zone = "",
+#                                     format = "%H:%M")
+
+for(i in 5:18){
+  
+  st <- paste("01/", i , "/2014 16:00", sep ="")
+  et <- paste("01/", i+1 , "/2014 15:59", sep ="")
+  
+  start_time <- mdy_hm(st)
+  end_time <- mdy_hm(et)
+  
+  time_cc_data <- cc_data %>%
+  filter(timestamp > start_time &
+           timestamp <end_time)
+
+  time_cc_data <- time_cc_data %>%
+    mutate(time15 = round_date(time_cc_data$timestamp, "15 minutes"))
+  
+  time_cc_data <- time_cc_data %>%
+    group_by(location, time15) %>%
+    add_count(location, time15, name = "count")
+  
+  pop_time_cc_data <- time_cc_data %>%
+    filter(location == "Katrina's Café"|
+             location == "Hippokampos" |
+             location == "Guy's Gyros" |
+             location == "Brew've Been Served")
+  
+  gTitle <- paste("Transaction Counts on ", i+1, "/01/2014", sep="")
+  
+  cc_tm_plot <- ggplot(pop_time_cc_data,
+         aes(time15, count, group = location)) + 
+    geom_line(aes(color = location), size = 1.5) + 
+    geom_point() + 
+    scale_fill_brewer(palette = "Set2") +
+    labs(x = "Time", y = "Number of Txn", title = gTitle) +
+    theme(plot.title = element_text(hjust = 0.5),
+          legend.position = "top")
+  
+  svl <- paste("Top 4 on ", i+1, "-01-2014.png", sep="")
+  #ggsave(svl, cc_tm_plot)
+  
+}
+```
+
+```{r Weekday Weekends Visits}
+
+sel_cc_data <-cc_data %>%
+  filter(location == "Katrina's Café" |
+           location == "Hippokampos" |
+           location == "Guy's Gyros" |
+           location == "Brew've Been Served")
+
+sel_cc_data <- sel_cc_data %>%
+  mutate(day = get_day(timestamp),
+         weekday = weekdays(timestamp),
+         hour = get_hour(timestamp),
+         time = format(timestamp, format = "%H:00"))
+
+weekday_cc_data <- sel_cc_data %>%
+  filter(weekday != "Saturday" |
+           weekday != "Sunday")
+
+p1 <- ggplot(weekday_cc_data, 
+       aes(factor(weekday_cc_data$time), 
+           fill = location)) + 
+  scale_fill_brewer(palette = "Set1") + 
+  geom_bar(position = position_dodge2(preserve = "single")) +
+  geom_text(stat = 'count',
+            aes(label = ..count..),
+            position = position_dodge2(width = 0.9, preserve = "single"),
+            vjust = -0.5,
+            size = 3) + 
+  ylim(0,105) +
+  labs(x = "Time in Hours", y = "Number of Transactions", title = "Weekdays Visits by Time (H)") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+p2 <- ggplot(weekday_cc_data, aes(factor(weekday_cc_data$time), 
+                              fill = location)) + 
+  scale_fill_brewer(palette = "Set1") + 
+  geom_bar() + 
+  labs(x = "Time in Hours", y = "Number of Transactions", title = "(Stacked) Weekdays Visits by Time (H)") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+g1 <- ggplotGrob(p1)
+g2 <- ggplotGrob(p2)
+
+g <- rbind(g1, g2, size = "first")
+
+g$widths <- unit.pmax(g1$widths, g2$widths)
+
+##########################
+#disable plotting
+##########################
+
+#grid.newpage()
+#grid.draw(g)
+
+weekend_cc_data <- sel_cc_data %>%
+  filter(weekday == "Saturday" |
+           weekday == "Sunday")
+
+p3 <- ggplot(weekend_cc_data, 
+       aes(factor(weekend_cc_data$time), 
+           fill = location)) + 
+  scale_fill_brewer(palette = "Set1") + 
+  geom_bar(position = position_dodge2(preserve = "single")) +
+  geom_text(stat = 'count',
+            aes(label = ..count..),
+            position = position_dodge2(width = 0.9, preserve = "single"),
+            vjust = -0.5,
+            size = 3) + 
+  ylim(0,100) +
+  labs(x = "Time in Hours", y = "Number of Transactions", title = "Weekends Visits by Time (H)") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+p4 <- ggplot(weekend_cc_data, aes(factor(weekend_cc_data$time), 
+                              fill = location)) + 
+  scale_fill_brewer(palette = "Set1") + 
+  geom_bar() + 
+  labs(x = "Time in Hours", y = "Number of Transactions", title = "(Stacked) Weekends Visits by Time (H)") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+g1 <- ggplotGrob(p1)
+g2 <- ggplotGrob(p3)
+
+g <- rbind(g1, g2, size = "first")
+
+g$widths <- unit.pmax(g1$widths, g2$widths)
+
+##########################
+#disable plotting
+##########################
+#grid.newpage()
+#grid.draw(g)
+
+```
+```
