@@ -563,8 +563,6 @@ suspicious_txn1 %>%
 
 # 4. Question 2 - Adding GPS and Vehicle Data into the Analysis
 
-## 4.1 Investigating Anomalies using GPS Data
-
 ```{r Analysing GPS data, include=FALSE}
 
 #Preparing the map
@@ -635,7 +633,7 @@ adj_gps_lag_plot <- ggplot(adj_gps_lag, aes(factor(id), lag)) +
 gps_lag_plot
 ```
 
-## 4.2 Investigating GPS Time Lag
+## 4.1 Investigating GPS Time Lag
 
 With the gps data, which comes with 5-decimal points for the lat/long co-ordinates, I attempted to round it off to 4 decimal points, to get an accuracy of only 11.1metres, so that I could do a count on popular co-ordinates that was frequented. Knowing that GPS communication would be continuous, it would be good to investigate the time lag between data to data also.
 
@@ -656,7 +654,7 @@ adj_gps_lag_plot
 ```
 From the adjusted GPS Lag Interval chart, we know that GPS would usually store its location with an interval of 1 to 2 seconds.
 
-## 4.3 Establishing Point Of Interests (POI)
+## 4.2 Establishing Point Of Interests (POI)
 
 For this set of raw data, it would be useful to establish a set of coordinates that could be inferred to POIs on the map. To do so, I would examine every set of GPS data and compare it to its location **3 mins later**. If its coordinates are the same, the assumption would be that the vehicle is parked at a location which may be inferred to as POI. And for the identification of POIs, we do not need a set of GPS coordinates that is highly accurate. As such, we would use a set of GPS coordinates that is accurate to the nearest 11.1m.
 
@@ -669,11 +667,6 @@ POI_gps <- locations_gps %>%
   ungroup() %>%
   filter(stay == TRUE) %>%
   distinct(lat, long)
-
-locations_gps$Timestamp[165230]
-lag(locations_gps$Timestamp[165230])
-
-locations_gps$lat[165230]
 
 #ploting out the locations
 tif_sf <- st_as_sf(POI_gps, 
@@ -694,21 +687,129 @@ tmPOI <- tm_shape(bgmap) +
 #svl <- "filename.png"
 #tmap_save(tmPOI, svl)
 
-POI_gps111 <- POI_gps
-
-POI_gps111$lat <- round(POI_gps111$lat, digits = 3)
-POI_gps111$long <- round(POI_gps111$long, digits = 3)
-
-POI_gps111 %>%
-  distinct(lat, long)
-
 ```
 
 ```{r print POI, echo=FALSE}
 tmPOI
 ```
 
+## 4.3 Investigating Anomalies using GPS Data
 
+We will attempt to investigate the anomalies by using the GPS data provide. 
+
+### 4.3.1 $10,000 transaction at Frydos Autosupply n’ More
+
+```{r 10000 transaction, include=FALSE}
+
+#finding locations with a 2 min buffer around 13/1/14 19:20
+start_time <- date_time_parse("2014-01-13 19:19:00",
+                zone = "",
+                format = "%Y-%m-%d %H:%M")
+
+end_time <- date_time_parse("2014-01-13 19:20:00",
+                zone = "",
+                format = "%Y-%m-%d %H:%M")
+
+txn10000 <- gps %>%
+  filter(Timestamp > start_time & Timestamp < end_time)
+
+#ploting out the locations
+tif_sf <- st_as_sf(txn10000, 
+                   coords = c("long", "lat"), 
+                   crs = 4326)
+
+#tmap_mode("view")
+
+poi_10000 <- tm_shape(bgmap) + 
+ tm_rgb(bgmap, r = 1, g = 2, b = 3,
+         alpha = 0.5,
+         saturation = 1,
+         interpolate = TRUE,
+         max.value = 255) +
+  tm_shape(tif_sf) + 
+  tm_dots(size = 0.25,
+          alpha = 0.5,
+          col = "red")
+
+```
+
+TO proceed with the investigation, we will make the following assumptions:
+
++ The GPS receiever was not tampered with.
++ The buyer was driving with a company vehicle to make the transaction.
++ The buyer was not hitching a ride to Frydos Autosupply n’ More
+
+While earlier research suggested that the GPS would be transmitting between 1 and 2 seconds during normal conditions, to be more prudent, we would a search on the GPS data between 19:19hrs and 19:21hrs on 13 Jan 2014. A total of 8 GPS data were discovered.
+
+```{r display txn10000 records, echo=FALSE}
+txn10000 <- txn10000[order(txn10000$Timestamp),]
+
+txn10000 %>%
+  kbl() %>%
+  kable_styling()
+```
+
+It was discovered the the vehicle with ID=33 was within the vicinity of transaction. We will proceed to plot the route for ID=33 on 13 Jan 2014 and match it against the transaction records for 9551.
+
+```{r echo=FALSE, ID=33}
+
+#finding locations with a 2 min buffer around 13/1/14 19:20
+start_time <- date_time_parse("2014-01-13 00:00:00",
+                zone = "",
+                format = "%Y-%m-%d %H:%M")
+
+end_time <- date_time_parse("2014-01-13 23:59:00",
+                zone = "",
+                format = "%Y-%m-%d %H:%M")
+
+gps_txn10000 <- gps %>%
+  filter(Timestamp > start_time & Timestamp < end_time) %>%
+  filter(id == 33)
+
+##convert
+gps_sf <- st_as_sf(gps_txn10000,
+                   coords = c("long", "lat"),
+                   crs = 4326)
+
+##string to gps path
+gps_path <- gps_sf %>%
+  group_by(id) %>%
+  summarize(m = mean(Timestamp),
+            do_union = FALSE) %>%
+  st_cast("LINESTRING")
+
+tmap_mode("plot")
+
+path_10000 <- tmPOI +
+  tm_shape(gps_path) + 
+  tm_lines(col = "blue")
+
+path_10000
+
+#svl <- "filename.png"
+#tmap_save(path_10000, svl)
+
+```
+
+```{r location records for 9551, echo=FALSE}
+#finding locations with a 2 min buffer around 13/1/14 19:20
+start_time <- date_time_parse("2014-01-13 00:00:00",
+                zone = "",
+                format = "%Y-%m-%d %H:%M")
+
+end_time <- date_time_parse("2014-01-13 23:59:00",
+                zone = "",
+                format = "%Y-%m-%d %H:%M")
+
+txn9551 <- cc_data %>%
+  filter(last4ccnum == 9551) %>%
+  filter(timestamp > start_time & timestamp < end_time) %>%
+  select(timestamp, location, price)
+
+txn9551 %>%
+  kbl() %>%
+  kable_styling()
+```
 
 ```{r print individual routes, eval=FALSE, include=FALSE}
 
