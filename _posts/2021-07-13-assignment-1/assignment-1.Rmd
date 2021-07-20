@@ -685,6 +685,14 @@ tmPOI <- tm_shape(bgmap) +
 #svl <- "filename.png"
 #tmap_save(tmPOI, svl)
 
+POI_gps111 <- POI_gps
+
+POI_gps111$lat <- round(POI_gps111$lat, digits = 3)
+POI_gps111$long <- round(POI_gps111$long, digits = 3)
+
+POI_gps111 %>%
+  distinct(lat, long)
+
 ```
 
 ```{r print POI, echo=FALSE}
@@ -699,7 +707,22 @@ plot_ID_routes <- function(emply_id){
   gps_path_selected <- gps_path %>%
     filter(id==emply_id)
   
+  POI_indi <- locations_gps %>%
+    mutate(min3 = Timestamp + 180) %>%
+    filter(id==emply_id) %>%
+    mutate(stay = if_else(min3 <= lag(min3) & lat == lag(lat) & long == lag(long), TRUE, FALSE)) %>% 
+    filter(stay == TRUE) %>%
+    distinct(lat, long)
+    
   pir <- paste("Route of ", emply_id, ".png", sep = "")
+  
+  tif_sf <- st_as_sf(POI_gps, 
+                   coords = c("long", "lat"), 
+                   crs = 4326)
+  
+  tif_sf_indi <- st_as_sf(POI_indi, 
+                   coords = c("long", "lat"), 
+                   crs = 4326)
 
   tm <- tm_shape(bgmap) + 
     tm_rgb(bgmap, r = 1, g = 2, b = 3,
@@ -707,8 +730,16 @@ plot_ID_routes <- function(emply_id){
          saturation = 1,
          interpolate = TRUE,
          max.value = 255) + 
-    tm_shape(gps_path_selected) + 
-    tm_lines()
+    tm_shape(gps_path_selected,
+             alpha = 0.6) + 
+    tm_lines() + 
+    tm_shape(tif_sf) + 
+    tm_dots(size = 0.25,
+            alpha = 0.5,
+            col = "green") +
+    tm_shape(tif_sf_indi) + 
+    tm_dots(size = 0.25,
+            col = "red")
   
   tmap_save(tm, filename = pir)
 }
