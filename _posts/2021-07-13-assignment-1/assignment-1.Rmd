@@ -550,6 +550,8 @@ suspicious_txn1 <- loyalty_data %>%
 The details of the suspicious transactions are as follows:
 
 ```{r print suspicious txn, echo=FALSE}
+suspicious_txn <- suspicious_txn[order(-suspicious_txn$price),]
+
 suspicious_txn %>%
   kbl() %>%
   kable_styling()
@@ -559,9 +561,9 @@ suspicious_txn1 %>%
   kable_styling()
 ```
 
-# 4. Question 1 - Adding GPS and Vehicle Data into the Analysis
+# 4. Question 2 - Adding GPS and Vehicle Data into the Analysis
 
-With the gps data, which comes with 5-decimal points for the lat/long co-ordinates, I attempted to round it off to 4 decimal points, to get an accuracy of only 11.1metres, so that I could do a count on popular co-ordinates that was frequented. Knowing that GPS communication would be continuous, it would be good to investigate the time lag between data to data.
+## 4.1 Investigating Anomalies using GPS Data
 
 ```{r Analysing GPS data, include=FALSE}
 
@@ -633,7 +635,9 @@ adj_gps_lag_plot <- ggplot(adj_gps_lag, aes(factor(id), lag)) +
 gps_lag_plot
 ```
 
-## 4.1 Investigating GPS Time Lag
+## 4.2 Investigating GPS Time Lag
+
+With the gps data, which comes with 5-decimal points for the lat/long co-ordinates, I attempted to round it off to 4 decimal points, to get an accuracy of only 11.1metres, so that I could do a count on popular co-ordinates that was frequented. Knowing that GPS communication would be continuous, it would be good to investigate the time lag between data to data also.
 
 From the boxplot, we could see that there are numerous outliers, such that the actual boxplot is too small to be seen. There are reasons as to why the lag between data is large. The reasons, included but not limited to:
 
@@ -652,19 +656,24 @@ adj_gps_lag_plot
 ```
 From the adjusted GPS Lag Interval chart, we know that GPS would usually store its location with an interval of 1 to 2 seconds.
 
-## 4.2 Establishing Point Of Interests (POI)
+## 4.3 Establishing Point Of Interests (POI)
 
 For this set of raw data, it would be useful to establish a set of coordinates that could be inferred to POIs on the map. To do so, I would examine every set of GPS data and compare it to its location **3 mins later**. If its coordinates are the same, the assumption would be that the vehicle is parked at a location which may be inferred to as POI. And for the identification of POIs, we do not need a set of GPS coordinates that is highly accurate. As such, we would use a set of GPS coordinates that is accurate to the nearest 11.1m.
 
 ```{r Identify POI, include=FALSE}
 
 POI_gps <- locations_gps %>%
-  mutate(min3 = Timestamp + 180) %>%
+  mutate(min3 = Timestamp + 60*3) %>%
   group_by(id) %>%
   mutate(stay = if_else(min3 <= lag(min3) & lat == lag(lat) & long == lag(long), TRUE, FALSE)) %>% 
   ungroup() %>%
   filter(stay == TRUE) %>%
   distinct(lat, long)
+
+locations_gps$Timestamp[165230]
+lag(locations_gps$Timestamp[165230])
+
+locations_gps$lat[165230]
 
 #ploting out the locations
 tif_sf <- st_as_sf(POI_gps, 
@@ -698,6 +707,7 @@ POI_gps111 %>%
 ```{r print POI, echo=FALSE}
 tmPOI
 ```
+
 
 
 ```{r print individual routes, eval=FALSE, include=FALSE}
