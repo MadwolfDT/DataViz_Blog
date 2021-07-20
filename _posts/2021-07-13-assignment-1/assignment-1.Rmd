@@ -28,7 +28,7 @@ packages = c('raster', 'sf',
              'arules', 'gtable',
              'grid', 'gridExtra',
              'chron', 'lubridate',
-             'kableExtra')
+             'kableExtra', 'hms')
 
 for(p in packages){
   if(!require(p, character.only = T)){
@@ -37,6 +37,8 @@ for(p in packages){
   library(p, character.only = T)
 
 }
+
+rm(p, packages)
 
 ```
 
@@ -75,7 +77,7 @@ There are a total of 3 csv files provided for MC 2. They are:
 There were a few issues that was needed to be resolved in both csv files.
 
 + There is a need to convert the timestamp of all files into a *dttm* format
-+ For **cc_data.csv** and **loyalty_data.csv** there are unrecognised characters within the *location* variable. Thus, I would convert it into a UTF-8 readable format.
++ For **cc_data.csv** and **loyalty_data.csv** there are unrecognised characters within the *location* variable. Thus, we would convert it into a UTF-8 readable format.
 
 ```{r data_prep_1, include=FALSE}
 
@@ -513,7 +515,7 @@ There are a series of transaction amount suspicious anomalies.
 + $10,000 at Frydos Autosupply
 + $4742.67, $4,513.16 and $4,429.76 Nationwide Refinery
 
-I will attempt to filter out the locations with high-paying transactions, to further observe if there are any more suspicious anomalies.
+We will attempt to filter out the locations with high-paying transactions, to further observe if there are any more suspicious anomalies.
 
 ```{r less_txn_cc_plot, echo=FALSE}
 girafe(
@@ -635,7 +637,7 @@ gps_lag_plot
 
 ## 4.1 Investigating GPS Time Lag
 
-With the gps data, which comes with 5-decimal points for the lat/long co-ordinates, I attempted to round it off to 4 decimal points, to get an accuracy of only 11.1metres, so that I could do a count on popular co-ordinates that was frequented. Knowing that GPS communication would be continuous, it would be good to investigate the time lag between data to data also.
+With the gps data, which comes with 5-decimal points for the lat/long co-ordinates, we attempted to round it off to 4 decimal points, to get an accuracy of only 11.1metres, so that we could do a count on popular co-ordinates that was frequented. Knowing that GPS communication would be continuous, it would be good to investigate the time lag between data to data also.
 
 From the boxplot, we could see that there are numerous outliers, such that the actual boxplot is too small to be seen. There are reasons as to why the lag between data is large. The reasons, included but not limited to:
 
@@ -656,7 +658,7 @@ From the adjusted GPS Lag Interval chart, we know that GPS would usually store i
 
 ## 4.2 Establishing Point Of Interests (POI)
 
-For this set of raw data, it would be useful to establish a set of coordinates that could be inferred to POIs on the map. To do so, I would examine every set of GPS data and compare it to its location **3 mins later**. If its coordinates are the same, the assumption would be that the vehicle is parked at a location which may be inferred to as POI. And for the identification of POIs, we do not need a set of GPS coordinates that is highly accurate. As such, we would use a set of GPS coordinates that is accurate to the nearest 11.1m.
+For this set of raw data, it would be useful to establish a set of coordinates that could be inferred to POIs on the map. To do so, we would examine every set of GPS data and compare it to its location **3 mins later**. If its coordinates are the same, the assumption would be that the vehicle is parked at a location which may be inferred to as POI. And for the identification of POIs, we do not need a set of GPS coordinates that is highly accurate. As such, we would use a set of GPS coordinates that is accurate to the nearest 11.1m.
 
 ```{r Identify POI, include=FALSE}
 
@@ -688,6 +690,36 @@ tmPOI <- tm_shape(bgmap) +
 #tmap_save(tmPOI, svl)
 
 ```
+
+```{r trial POI, eval=FALSE, include=FALSE}
+
+compareA <- locations_gps
+
+POI <- structure(list(Timestamp = structure(c(), tzone = "", class = c("POSIXct", "POSIXt")), 
+                      id = c(), 
+                      lat = c(), 
+                      long = c()), #row.names = c(NA, -6L), 
+                 class = c("tbl_df", "tbl", "data.frame"))
+
+for(i in -15:15){
+  
+  compareB <- locations_gps %>%
+  mutate(Timestamp2 = Timestamp + 60*3+i) %>%
+  select(-c(Timestamp))
+  colnames(compareB)[which(names(compareB) == "Timestamp2")] <- "Timestamp"
+  colorder <- c("Timestamp", "id", "lat", "long")
+  compareB <- compareB[, colorder]
+  
+  x <- inner_join(compareA, compareB, by = c("Timestamp","id", "lat","long"))
+  POI <- rbind(POI, x)
+  
+}
+
+POI <- POI %>%
+  distinct(lat,long)
+
+```
+
 
 ```{r print POI, echo=FALSE}
 tmPOI
@@ -732,8 +764,7 @@ poi_10000 <- tm_shape(bgmap) +
           col = "red")
 
 ```
-
-TO proceed with the investigation, we will make the following assumptions:
+To proceed with the investigation, we will make the following assumptions:
 
 + The GPS receiever was not tampered with.
 + The buyer was driving with a company vehicle to make the transaction.
@@ -814,6 +845,18 @@ txn9551 %>%
 ```{r print individual routes, eval=FALSE, include=FALSE}
 
 plot_ID_routes <- function(emply_id){
+  ##convert
+  gps_sf <- st_as_sf(gps,
+                     coords = c("long", "lat"),
+                     crs = 4326)
+  
+  ##string to gps path
+  gps_path <- gps_sf %>%
+    group_by(id) %>%
+    summarize(m = mean(Timestamp),
+              do_union = FALSE) %>%
+    st_cast("LINESTRING")
+  
   #filter by ID
   gps_path_selected <- gps_path %>%
     filter(id==emply_id)
@@ -827,30 +870,17 @@ plot_ID_routes <- function(emply_id){
     
   pir <- paste("Route of ", emply_id, ".png", sep = "")
   
-  tif_sf <- st_as_sf(POI_gps, 
-                   coords = c("long", "lat"), 
-                   crs = 4326)
-  
   tif_sf_indi <- st_as_sf(POI_indi, 
                    coords = c("long", "lat"), 
                    crs = 4326)
 
-  tm <- tm_shape(bgmap) + 
-    tm_rgb(bgmap, r = 1, g = 2, b = 3,
-         alpha = NA,
-         saturation = 1,
-         interpolate = TRUE,
-         max.value = 255) + 
-    tm_shape(gps_path_selected,
-             alpha = 0.6) + 
-    tm_lines() + 
-    tm_shape(tif_sf) + 
-    tm_dots(size = 0.25,
-            alpha = 0.5,
-            col = "green") +
+  tm <- tmPOI + 
+    tm_shape(gps_path_selected) + 
+    tm_lines() +
     tm_shape(tif_sf_indi) + 
-    tm_dots(size = 0.25,
-            col = "red")
+    tm_dots(size = 0.8,
+            alpha = 0.3, 
+            col = "green")
   
   tmap_save(tm, filename = pir)
 }
