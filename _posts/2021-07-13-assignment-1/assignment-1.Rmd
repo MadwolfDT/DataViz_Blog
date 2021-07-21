@@ -732,7 +732,7 @@ It was mentioned that GASTech company vehicles are installed with GPS and *"the 
 tmPOI
 ```
 
-```{r POIs visited}
+```{r POIs visited, include=FALSE}
 
 records_POI <- locations_gps %>%
   mutate(Datestamp = as.Date(Timestamp + 60*60*8)) %>%
