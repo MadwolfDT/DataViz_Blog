@@ -96,17 +96,17 @@ loyalty_data$timestamp <- date_time_parse(loyalty_data$timestamp,
                                      format = "%m/%d/%Y")
 
 #Amend string text for Katrina's Cafe
-cc_data2 <- cc_data %>%
+cc_data <- cc_data %>%
   mutate(location = str_replace_all(location,
                                     pattern = "Katerin.+",
                                     replacement = "Katrina\x27s Caf\xe9"))
-cc_data <- cc_data2
+#cc_data <- cc_data2
 
-loyalty_data2 <- loyalty_data %>%
+loyalty_data <- loyalty_data %>%
   mutate(location = str_replace_all(location,
                                     pattern = "Katerin.+",
                                     replacement = "Katrina\x27s Caf\xe9"))
-loyalty_data <- loyalty_data2
+#loyalty_data <- loyalty_data2
 
 ```
 
@@ -581,6 +581,114 @@ gps$Timestamp <- date_time_parse(gps$Timestamp,
                                  zone = "",
                                  format = "%m/%d/%Y %H:%M:%S")
 
+##convert
+  gps_sf <- st_as_sf(gps,
+                     coords = c("long", "lat"),
+                     crs = 4326)
+
+##string to gps path
+  gps_path <- gps_sf %>%
+    group_by(id) %>%
+    summarize(m = mean(Timestamp),
+              do_union = FALSE) %>%
+    st_cast("LINESTRING")
+  
+plot_ID_routes <- function(emply_id){
+  
+  #filter by ID
+  gps_path_selected <- gps_path %>%
+    filter(id==emply_id)
+  
+  POI_indi <- locations_gps %>%
+    filter(id==emply_id) %>%
+    mutate(stop = Timestamp - lag(Timestamp)) %>%
+    mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
+    filter(parked == TRUE) %>%
+    distinct(lat, long)
+    
+  tif_sf_indi <- st_as_sf(POI_indi, 
+                   coords = c("long", "lat"), 
+                   crs = 4326)
+
+  tm <- tmPOI + 
+    tm_shape(gps_path_selected) + 
+    tm_lines() +
+    tm_shape(tif_sf_indi) + 
+    tm_dots(size = 0.8,
+            alpha = 0.3, 
+            col = "green")
+  
+  pir <- paste("Route of ", emply_id, ".png", sep = "")
+  tmap_save(tm, filename = pir)
+}
+
+print_ID_routes <- function(emply_id){
+  
+  #filter by ID
+  gps_path_selected <- gps_path %>%
+    filter(id==emply_id)
+  
+  POI_indi <- locations_gps %>%
+    filter(id==emply_id) %>%
+    mutate(stop = Timestamp - lag(Timestamp)) %>%
+    mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
+    filter(parked == TRUE) %>%
+    distinct(lat, long)
+    
+  pir <- paste("Route of ", emply_id, ".png", sep = "")
+  
+  tif_sf_indi <- st_as_sf(POI_indi, 
+                   coords = c("long", "lat"), 
+                   crs = 4326)
+
+  tm <- tmPOI + 
+    tm_shape(gps_path_selected) + 
+    tm_lines() +
+    tm_shape(tif_sf_indi) + 
+    tm_dots(size = 0.8,
+            alpha = 0.3, 
+            col = "green")
+  
+  return(tm)
+}  
+
+print_ID_routes_withDate <- function(emply_id, dtmp){
+  
+  gps_sf_t <- gps_sf %>%
+    mutate(Datestamp = as.Date(Timestamp + 60*60*8)) %>%
+    filter(id == emply_id & Datestamp == dtmp)
+
+  ##string to gps path
+  gps_path <- gps_sf_t %>%
+    summarize(m = mean(Timestamp),
+              do_union = FALSE) %>%
+    st_cast("LINESTRING")
+  
+  POI_indi <- locations_gps %>%
+    mutate(Datestamp = as.Date(Timestamp + 60*60*8)) %>%
+    filter(id==emply_id & Datestamp == dtmp) %>%
+    mutate(stop = Timestamp - lag(Timestamp)) %>%
+    mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
+    filter(parked == TRUE) %>%
+    distinct(lat, long)
+    
+  pir <- paste("Route of ", emply_id, ".png", sep = "")
+  
+  tif_sf_indi <- st_as_sf(POI_indi, 
+                   coords = c("long", "lat"), 
+                   crs = 4326)
+
+  tm <- tmPOI + 
+    tm_shape(gps_path) + 
+    tm_lines() +
+    tm_shape(tif_sf_indi) + 
+    tm_dots(size = 0.8,
+            alpha = 0.3, 
+            col = "green")
+  
+  return(tm)
+} 
+
 ```
 ```{r Identify POI, include=FALSE}
 
@@ -615,9 +723,6 @@ tmPOI <- tm_shape(bgmap) +
           alpha = 0.5,
           col = "red")
 
-#svl <- "filename.png"
-#tmap_save(tmPOI, svl)
-
 ```
 ## 4.1 Identifying Places of Interests
 
@@ -627,11 +732,33 @@ It was mentioned that GASTech company vehicles are installed with GPS and *"the 
 tmPOI
 ```
 
-## 4.3 Investigating Anomalies using GPS Data
+```{r POIs visited}
+
+records_POI <- locations_gps %>%
+  mutate(Datestamp = as.Date(Timestamp + 60*60*8)) %>%
+  group_by(id) %>%
+  mutate(stop = Timestamp - lag(Timestamp)) %>%
+  mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
+  ungroup() %>%
+  filter(parked == TRUE) %>%
+  group_by(id, Datestamp) %>%
+  add_count(id, Datestamp, name = "Visits On Day") %>%
+  select(-c(stop, parked)) %>%
+  ungroup()  
+
+records_cc <- cc_data %>%
+  mutate(Datestamp = as.Date(timestamp + 60*60*8)) %>%
+  group_by(last4ccnum, Datestamp) %>%
+  add_count(last4ccnum, Datestamp, name = "Visits on Day") %>%
+  ungroup()
+
+```
+
+## 4.2 Investigating Anomalies using GPS Data
 
 We will attempt to investigate the anomalies by using the GPS data provide. 
 
-### 4.3.1 $10,000 transaction at Frydos Autosupply n’ More
+### 4.2.1 $10,000 transaction at Frydos Autosupply n’ More
 
 ```{r 10000 transaction, include=FALSE}
 
@@ -647,23 +774,10 @@ end_time <- date_time_parse("2014-01-13 19:20:00",
 txn10000 <- gps %>%
   filter(Timestamp > start_time & Timestamp < end_time)
 
-#ploting out the locations
-tif_sf <- st_as_sf(txn10000, 
-                   coords = c("long", "lat"), 
-                   crs = 4326)
+plot_txn10000 <- print_ID_routes_withDate(33,as.Date(end_time + 60*60*8))
 
-#tmap_mode("view")
-
-poi_10000 <- tm_shape(bgmap) + 
- tm_rgb(bgmap, r = 1, g = 2, b = 3,
-         alpha = 0.5,
-         saturation = 1,
-         interpolate = TRUE,
-         max.value = 255) +
-  tm_shape(tif_sf) + 
-  tm_dots(size = 0.25,
-          alpha = 0.5,
-          col = "red")
+#pir <- paste("Route of ", 33, " on ", as.Date(end_time + 60*60*8),".png", sep = "")
+#tmap_save(plot_txn10000, filename = pir)
 
 ```
 To proceed with the investigation, we will make the following assumptions:
@@ -672,7 +786,7 @@ To proceed with the investigation, we will make the following assumptions:
 + The buyer was driving with a company vehicle to make the transaction.
 + The buyer was not hitching a ride to Frydos Autosupply n’ More
 
-While earlier research suggested that the GPS would be transmitting between 1 and 2 seconds during normal conditions, to be more prudent, we would a search on the GPS data between 19:19hrs and 19:21hrs on 13 Jan 2014. A total of 8 GPS data were discovered.
+We would a search on the GPS data between 19:19hrs and 19:21hrs on 13 Jan 2014. A total of 8 GPS data were discovered.
 
 ```{r display txn10000 records, echo=FALSE}
 txn10000 <- txn10000[order(txn10000$Timestamp),]
@@ -684,44 +798,8 @@ txn10000 %>%
 
 It was discovered the the vehicle with ID=33 was within the vicinity of transaction. We will proceed to plot the route for ID=33 on 13 Jan 2014 and match it against the transaction records for 9551.
 
-```{r echo=FALSE, ID=33}
-
-#finding locations with a 2 min buffer around 13/1/14 19:20
-start_time <- date_time_parse("2014-01-13 00:00:00",
-                zone = "",
-                format = "%Y-%m-%d %H:%M")
-
-end_time <- date_time_parse("2014-01-13 23:59:00",
-                zone = "",
-                format = "%Y-%m-%d %H:%M")
-
-gps_txn10000 <- gps %>%
-  filter(Timestamp > start_time & Timestamp < end_time) %>%
-  filter(id == 33)
-
-##convert
-gps_sf <- st_as_sf(gps_txn10000,
-                   coords = c("long", "lat"),
-                   crs = 4326)
-
-##string to gps path
-gps_path <- gps_sf %>%
-  group_by(id) %>%
-  summarize(m = mean(Timestamp),
-            do_union = FALSE) %>%
-  st_cast("LINESTRING")
-
-tmap_mode("plot")
-
-path_10000 <- tmPOI +
-  tm_shape(gps_path) + 
-  tm_lines(col = "blue")
-
-path_10000
-
-#svl <- "filename.png"
-#tmap_save(path_10000, svl)
-
+```{r print 33, echo=FALSE}
+plot_txn10000
 ```
 
 ```{r location records for 9551, echo=FALSE}
@@ -746,46 +824,7 @@ txn9551 %>%
 
 ```{r print individual routes, eval=FALSE, include=FALSE}
 
-plot_ID_routes <- function(emply_id){
-  ##convert
-  gps_sf <- st_as_sf(gps,
-                     coords = c("long", "lat"),
-                     crs = 4326)
-  
-  ##string to gps path
-  gps_path <- gps_sf %>%
-    group_by(id) %>%
-    summarize(m = mean(Timestamp),
-              do_union = FALSE) %>%
-    st_cast("LINESTRING")
-  
-  #filter by ID
-  gps_path_selected <- gps_path %>%
-    filter(id==emply_id)
-  
-  POI_indi <- locations_gps %>%
-    filter(id==emply_id) %>%
-    mutate(stop = Timestamp - lag(Timestamp)) %>%
-    mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
-    filter(parked == TRUE) %>%
-    distinct(lat, long)
-    
-  pir <- paste("Route of ", emply_id, ".png", sep = "")
-  
-  tif_sf_indi <- st_as_sf(POI_indi, 
-                   coords = c("long", "lat"), 
-                   crs = 4326)
 
-  tm <- tmPOI + 
-    tm_shape(gps_path_selected) + 
-    tm_lines() +
-    tm_shape(tif_sf_indi) + 
-    tm_dots(size = 0.8,
-            alpha = 0.3, 
-            col = "green")
-  
-  tmap_save(tm, filename = pir)
-}
 
 num_emply <- gps %>%
   distinct(id)
