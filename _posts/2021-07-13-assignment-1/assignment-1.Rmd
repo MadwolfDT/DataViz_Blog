@@ -593,6 +593,52 @@ gps$Timestamp <- date_time_parse(gps$Timestamp,
               do_union = FALSE) %>%
     st_cast("LINESTRING")
   
+```
+```{r Identify POI, include=FALSE}
+
+#Discover top locations recorded
+locations_gps <- gps 
+
+#Discard the 5th decimal place and have an accuracy of 11.1m
+locations_gps$lat <- round(locations_gps$lat, digits = 4)
+locations_gps$long <- round(locations_gps$long, digits = 4)
+
+POI <- locations_gps %>%
+  group_by(id) %>%
+  mutate(stop = Timestamp - lag(Timestamp)) %>%
+  mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
+  ungroup() %>%
+  filter(parked == TRUE) %>%
+  distinct(lat, long)
+
+#ploting out the locations
+tif_sf <- st_as_sf(POI, 
+                   coords = c("long", "lat"), 
+                   crs = 4326) %>%
+  st_cast("POINT") %>%
+  mutate(coordinates = geometry) %>%
+  mutate(long=unlist(coordinates)[1],
+         lat=unlist(coordinates)[2]) %>%
+  select(-c(coordinates))
+
+tmPOI <- tm_shape(bgmap) +
+  tm_rgb(bgmap, r = 1, g = 2, b = 3,
+         alpha = 0.5,
+         saturation = 1,
+         interpolate = TRUE,
+         max.value = 255) +
+  tm_shape(tif_sf) + 
+  tm_dots(size = 0.05,
+          alpha = 0.5,
+          col = "red",
+          title = "Location",
+          legend.show = TRUE,
+          id = "Click for Details")
+
+```
+
+```{r tmMap Functions, include=FALSE}
+
 plot_ID_routes <- function(emply_id){
   
   #filter by ID
@@ -672,8 +718,6 @@ print_ID_routes_withDate <- function(emply_id, dtmp){
     filter(parked == TRUE) %>%
     distinct(lat, long)
     
-  pir <- paste("Route of ", emply_id, ".png", sep = "")
-  
   tif_sf_indi <- st_as_sf(POI_indi, 
                    coords = c("long", "lat"), 
                    crs = 4326)
@@ -689,46 +733,39 @@ print_ID_routes_withDate <- function(emply_id, dtmp){
   return(tm)
 } 
 
-```
-```{r Identify POI, include=FALSE}
+print_POI_withDate <- function(dtmp){
 
-#Discover top locations recorded
-locations_gps <- gps 
-
-#Discard the 5th decimal place and have an accuracy of 11.1m
-locations_gps$lat <- round(locations_gps$lat, digits = 4)
-locations_gps$long <- round(locations_gps$long, digits = 4)
-
-POI <- locations_gps %>%
-  group_by(id) %>%
-  mutate(stop = Timestamp - lag(Timestamp)) %>%
-  mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
-  ungroup() %>%
-  filter(parked == TRUE) %>%
-  distinct(lat, long)
-
-#ploting out the locations
-tif_sf <- st_as_sf(POI, 
+  POI_indi <- locations_gps %>%
+    mutate(Datestamp = as.Date(Timestamp + 60*60*8)) %>%
+    filter(Datestamp == dtmp) %>%
+    mutate(stop = Timestamp - lag(Timestamp)) %>%
+    mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
+    filter(parked == TRUE) %>%
+    distinct(lat, long)
+    
+    tif_sf_indi <- st_as_sf(POI_indi, 
                    coords = c("long", "lat"), 
                    crs = 4326)
 
-tmPOI <- tm_shape(bgmap) + 
- tm_rgb(bgmap, r = 1, g = 2, b = 3,
-         alpha = 0.5,
-         saturation = 1,
-         interpolate = TRUE,
-         max.value = 255) +
-  tm_shape(tif_sf) + 
-  tm_dots(size = 0.25,
-          alpha = 0.5,
-          col = "red")
+  tm <- tmPOI + 
+    tm_shape(tif_sf_indi) + 
+    tm_dots(size = 0.8,
+            alpha = 0.3, 
+            col = "green")
+  
+  return(tm)
+} 
 
 ```
+
 ## 4.1 Identifying Places of Interests
 
 It was mentioned that GASTech company vehicles are installed with GPS and *"the vehicles are tracked periodically as long as they are moving"*. With that, as long as the vehicles are in stationary, the GPS would not be tracking the movement. With that, we could analyse the gps data and determine common Places of Interests (POI) by finding our the time lag between each data, grouped by the ID, and analyse all the lat/long coordinates that has a time lag of more than 3 minutes. Since we are analysing for POIs, the accuracy could be in the range of 11.1m, thus, we would only use lat/long up to 4 decimal points.
 
 ```{r print POI, echo=FALSE}
+
+tmap_mode("view")
+
 tmPOI
 ```
 
@@ -776,8 +813,10 @@ txn10000 <- gps %>%
 
 plot_txn10000 <- print_ID_routes_withDate(33,as.Date(end_time + 60*60*8))
 
-#pir <- paste("Route of ", 33, " on ", as.Date(end_time + 60*60*8),".png", sep = "")
-#tmap_save(plot_txn10000, filename = pir)
+plot_Fryros <- print_POI_withDate(as.Date(end_time + 60*60*8))
+
+pir <- paste("Route of Fryos ", " on ", as.Date(end_time + 60*60*8),".png", sep = "")
+tmap_save(plot_Fryros, filename = pir)
 
 ```
 To proceed with the investigation, we will make the following assumptions:
@@ -786,7 +825,7 @@ To proceed with the investigation, we will make the following assumptions:
 + The buyer was driving with a company vehicle to make the transaction.
 + The buyer was not hitching a ride to Frydos Autosupply n’ More
 
-We would a search on the GPS data between 19:19hrs and 19:21hrs on 13 Jan 2014. A total of 8 GPS data were discovered.
+We would a search on the GPS data for 13 Jan 2014, for all vehicles that had parked in the vicinity of Frydos Autosupply n’ More.
 
 ```{r display txn10000 records, echo=FALSE}
 txn10000 <- txn10000[order(txn10000$Timestamp),]
