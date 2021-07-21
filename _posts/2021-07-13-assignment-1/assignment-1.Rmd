@@ -28,7 +28,8 @@ packages = c('raster', 'sf',
              'arules', 'gtable',
              'grid', 'gridExtra',
              'chron', 'lubridate',
-             'kableExtra', 'hms')
+             'kableExtra', 'hms',
+             'sp')
 
 for(p in packages){
   if(!require(p, character.only = T)){
@@ -565,23 +566,11 @@ suspicious_txn1 %>%
 
 # 4. Question 2 - Adding GPS and Vehicle Data into the Analysis
 
-```{r Analysing GPS data, include=FALSE}
+```{r Initiating map, include=FALSE}
 
 #Preparing the map
 bgmap <- raster("data/Geospatial/MC2-tourist.tif")
 
-#set tmap to plotting
-#tmap_mode("plot")
-
-#########################################
-#Displaying a Blank Map
-#########################################
-#tm_shape(bgmap) + 
-# tm_rgb(bgmap, r = 1, g = 2, b = 3,
-#         alpha = NA,
-#         saturation = 1,
-#         interpolate = TRUE,
-#         max.value = 255)
 
 Abila_st <- st_read(dsn = "data/Geospatial", 
                     layer = 'Abila')
@@ -592,6 +581,9 @@ gps$Timestamp <- date_time_parse(gps$Timestamp,
                                  zone = "",
                                  format = "%m/%d/%Y %H:%M:%S")
 
+```
+```{r Identify POI, include=FALSE}
+
 #Discover top locations recorded
 locations_gps <- gps 
 
@@ -599,79 +591,16 @@ locations_gps <- gps
 locations_gps$lat <- round(locations_gps$lat, digits = 4)
 locations_gps$long <- round(locations_gps$long, digits = 4)
 
-gps_lag <- gps %>%
+POI <- locations_gps %>%
   group_by(id) %>%
-  mutate(timelag = lead(Timestamp, order_by = id)) %>%
-  mutate(lag = timelag - Timestamp)
-
-y_pp <- format_format(big.mark = "",
-                      decimal.mark = ",",
-                      scientific = FALSE)
-
-gps_lag_plot <- ggplot(gps_lag, aes(factor(id), lag)) + 
-  labs(x = "ID", y = "Time Lag", title = "GPS Lag Interval") +
-  scale_y_continuous(labels = y_pp) + 
-  geom_boxplot_interactive(aes(tooltip = Timestamp),
-                           stackgroups = TRUE) + 
-  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1.1, hjust = 1.1),
-        axis.text.y = element_text(size = 7),
-        plot.title = element_text(hjust = 0.5))
-
-#adjust to 10s
-adj_gps_lag <- gps_lag %>%
-  filter(lag <= 5)
-
-adj_gps_lag_plot <- ggplot(adj_gps_lag, aes(factor(id), lag)) + 
-  labs(x = "ID", y = "Time Lag", title = "GPS Lag Interval") +
-  scale_y_continuous(labels = y_pp) + 
-  geom_boxplot_interactive(aes(tooltip = Timestamp),
-                           stackgroups = TRUE) + 
-  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1.1, hjust = 1.1),
-        axis.text.y = element_text(size = 7),
-        plot.title = element_text(hjust = 0.5))
-```
-
-```{r actual gps lag, echo=FALSE}
-gps_lag_plot
-```
-
-## 4.1 Investigating GPS Time Lag
-
-With the gps data, which comes with 5-decimal points for the lat/long co-ordinates, we attempted to round it off to 4 decimal points, to get an accuracy of only 11.1metres, so that we could do a count on popular co-ordinates that was frequented. Knowing that GPS communication would be continuous, it would be good to investigate the time lag between data to data also.
-
-From the boxplot, we could see that there are numerous outliers, such that the actual boxplot is too small to be seen. There are reasons as to why the lag between data is large. The reasons, included but not limited to:
-
-+ The car was parked for a long period of time. Thus, the current to power the GPS could be cut off to prevent the vehicle battery from draining out completely. 
-
-+ GPS is malfunctioning
-
-+ It is programmed not to store any locations if GPS signal is weak.
-
-+ Tampering of GPS
-
-Since we are more interested to infer the GPS data to Point of Interests, we would adjust the data such that we can filter out outliers.
-
-```{r adjusted gps lag, echo=FALSE}
-adj_gps_lag_plot
-```
-From the adjusted GPS Lag Interval chart, we know that GPS would usually store its location with an interval of 1 to 2 seconds.
-
-## 4.2 Establishing Point Of Interests (POI)
-
-For this set of raw data, it would be useful to establish a set of coordinates that could be inferred to POIs on the map. To do so, we would examine every set of GPS data and compare it to its location **3 mins later**. If its coordinates are the same, the assumption would be that the vehicle is parked at a location which may be inferred to as POI. And for the identification of POIs, we do not need a set of GPS coordinates that is highly accurate. As such, we would use a set of GPS coordinates that is accurate to the nearest 11.1m.
-
-```{r Identify POI, include=FALSE}
-
-POI_gps <- locations_gps %>%
-  mutate(min3 = Timestamp + 60*3) %>%
-  group_by(id) %>%
-  mutate(stay = if_else(min3 <= lag(min3) & lat == lag(lat) & long == lag(long), TRUE, FALSE)) %>% 
+  mutate(stop = Timestamp - lag(Timestamp)) %>%
+  mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
   ungroup() %>%
-  filter(stay == TRUE) %>%
+  filter(parked == TRUE) %>%
   distinct(lat, long)
 
 #ploting out the locations
-tif_sf <- st_as_sf(POI_gps, 
+tif_sf <- st_as_sf(POI, 
                    coords = c("long", "lat"), 
                    crs = 4326)
 
@@ -690,36 +619,9 @@ tmPOI <- tm_shape(bgmap) +
 #tmap_save(tmPOI, svl)
 
 ```
+## 4.1 Identifying Places of Interests
 
-```{r trial POI, eval=FALSE, include=FALSE}
-
-compareA <- locations_gps
-
-POI <- structure(list(Timestamp = structure(c(), tzone = "", class = c("POSIXct", "POSIXt")), 
-                      id = c(), 
-                      lat = c(), 
-                      long = c()), #row.names = c(NA, -6L), 
-                 class = c("tbl_df", "tbl", "data.frame"))
-
-for(i in -15:15){
-  
-  compareB <- locations_gps %>%
-  mutate(Timestamp2 = Timestamp + 60*3+i) %>%
-  select(-c(Timestamp))
-  colnames(compareB)[which(names(compareB) == "Timestamp2")] <- "Timestamp"
-  colorder <- c("Timestamp", "id", "lat", "long")
-  compareB <- compareB[, colorder]
-  
-  x <- inner_join(compareA, compareB, by = c("Timestamp","id", "lat","long"))
-  POI <- rbind(POI, x)
-  
-}
-
-POI <- POI %>%
-  distinct(lat,long)
-
-```
-
+It was mentioned that GASTech company vehicles are installed with GPS and *"the vehicles are tracked periodically as long as they are moving"*. With that, as long as the vehicles are in stationary, the GPS would not be tracking the movement. With that, we could analyse the gps data and determine common Places of Interests (POI) by finding our the time lag between each data, grouped by the ID, and analyse all the lat/long coordinates that has a time lag of more than 3 minutes. Since we are analysing for POIs, the accuracy could be in the range of 11.1m, thus, we would only use lat/long up to 4 decimal points.
 
 ```{r print POI, echo=FALSE}
 tmPOI
@@ -862,10 +764,10 @@ plot_ID_routes <- function(emply_id){
     filter(id==emply_id)
   
   POI_indi <- locations_gps %>%
-    mutate(min3 = Timestamp + 180) %>%
     filter(id==emply_id) %>%
-    mutate(stay = if_else(min3 <= lag(min3) & lat == lag(lat) & long == lag(long), TRUE, FALSE)) %>% 
-    filter(stay == TRUE) %>%
+    mutate(stop = Timestamp - lag(Timestamp)) %>%
+    mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
+    filter(parked == TRUE) %>%
     distinct(lat, long)
     
   pir <- paste("Route of ", emply_id, ".png", sep = "")

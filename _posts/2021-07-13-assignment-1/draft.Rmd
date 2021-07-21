@@ -244,3 +244,67 @@ tm <- tm_shape(bgmap) +
 tm_shape(tif_sf) + 
   tm_dots()
 ```
+
+```{r gps lag}
+gps_lag <- gps %>%
+  group_by(id) %>%
+  mutate(timelag = lead(Timestamp, order_by = id)) %>%
+  mutate(lag = timelag - Timestamp)
+
+y_pp <- format_format(big.mark = "",
+                      decimal.mark = ",",
+                      scientific = FALSE)
+
+gps_lag_plot <- ggplot(gps_lag, aes(factor(id), lag)) + 
+  labs(x = "ID", y = "Time Lag", title = "GPS Lag Interval") +
+  scale_y_continuous(labels = y_pp) + 
+  geom_boxplot_interactive(aes(tooltip = Timestamp),
+                           stackgroups = TRUE) + 
+  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1.1, hjust = 1.1),
+        axis.text.y = element_text(size = 7),
+        plot.title = element_text(hjust = 0.5))
+
+#adjust to 10s
+adj_gps_lag <- gps_lag %>%
+  filter(lag <= 5)
+
+adj_gps_lag_plot <- ggplot(adj_gps_lag, aes(factor(id), lag)) + 
+  labs(x = "ID", y = "Time Lag", title = "GPS Lag Interval") +
+  scale_y_continuous(labels = y_pp) + 
+  geom_boxplot_interactive(aes(tooltip = Timestamp),
+                           stackgroups = TRUE) + 
+  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1.1, hjust = 1.1),
+        axis.text.y = element_text(size = 7),
+        plot.title = element_text(hjust = 0.5))
+
+POI_gps <- locations_gps %>%
+  mutate(min3 = Timestamp + 60*3) %>%
+  group_by(id) %>%
+  mutate(stay = if_else(min3 <= lag(min3) & lat == lag(lat) & long == lag(long), TRUE, FALSE)) %>% 
+  ungroup() %>%
+  filter(stay == TRUE) %>%
+  distinct(lat, long)
+
+```
+
+## 4.1 Investigating GPS Time Lag
+
+With the gps data, which comes with 5-decimal points for the lat/long co-ordinates, we attempted to round it off to 4 decimal points, to get an accuracy of only 11.1metres, so that we could do a count on popular co-ordinates that was frequented. Knowing that GPS communication would be continuous, it would be good to investigate the time lag between data to data also.
+
+From the boxplot, we could see that there are numerous outliers, such that the actual boxplot is too small to be seen. There are reasons as to why the lag between data is large. The reasons, included but not limited to:
+
++ The car was parked for a long period of time. Thus, the current to power the GPS could be cut off to prevent the vehicle battery from draining out completely. 
+
++ GPS is malfunctioning
+
++ It is programmed not to store any locations if GPS signal is weak.
+
++ Tampering of GPS
+
+Since we are more interested to infer the GPS data to Point of Interests, we would adjust the data such that we can filter out outliers.
+
+From the adjusted GPS Lag Interval chart, we know that GPS would usually store its location with an interval of 1 to 2 seconds.
+
+## 4.2 Establishing Point Of Interests (POI)
+
+For this set of raw data, it would be useful to establish a set of coordinates that could be inferred to POIs on the map. To do so, we would examine every set of GPS data and compare it to its location **3 mins later**. If its coordinates are the same, the assumption would be that the vehicle is parked at a location which may be inferred to as POI. And for the identification of POIs, we do not need a set of GPS coordinates that is highly accurate. As such, we would use a set of GPS coordinates that is accurate to the nearest 11.1m.
