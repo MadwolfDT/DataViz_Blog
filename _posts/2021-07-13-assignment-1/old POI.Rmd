@@ -1,0 +1,587 @@
+---
+title: "old POI"
+author: "Davmes Tan"
+date: "22/07/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Identify POI, include=FALSE}
+records_POI <- locations_gps %>%
+  mutate(Datestamp = as.Date(Timestamp + 60*60*8)) %>%
+  group_by(id) %>%
+  mutate(stop = Timestamp - lag(Timestamp)) %>%
+  mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
+  ungroup() %>%
+  filter(parked == TRUE) %>%
+  group_by(id, Datestamp) %>%
+  add_count(id, Datestamp, name = "Visits On Day") %>%
+  ungroup()
+records_POI <- records_POI[c(1,5,2,8,3,4,6,7)]
+
+#getting all the POI coordinates for homes
+#124 POIs to be deleted
+POI_home <- records_POI %>%
+  filter(stop >= 60*60*6) %>%
+  distinct(id, lat, long) %>%
+  group_by(id) %>%
+  arrange(id, lat, long) %>%
+  mutate(near_lat = lat - lag(lat),
+         near_long = long - lag(long),
+         lat111 = trunc(lat*1000)/1000,
+         long111 = trunc(long*1000)/1000) %>%
+  group_by(id, lat111, long111) %>%
+  add_count(id, lat111, long111, name = "count") %>%
+  filter(count >= 2) %>%
+  arrange(id, near_lat, near_long) %>%
+  ungroup() %>%
+  select(-c("near_lat", "near_long", "count"))
+
+all_POI <- locations_gps %>%
+  group_by(id) %>%
+  mutate(stop = Timestamp - lag(Timestamp)) %>%
+  mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
+  ungroup() %>%
+  filter(parked == TRUE) %>%
+  distinct(lat, long)
+
+#leaving only POIs
+#not plotting yet
+POI <- anti_join(all_POI, POI_home,
+                 by = "lat", "long")
+
+#Determining Frequent POIs/ Office
+x <- anti_join(records_POI, POI_home,
+                          by = "lat", "long")
+
+POI_popular <- x %>%
+  select(-c("Visits On Day", "stop", "parked")) %>%
+  group_by(lat,long) %>%
+  add_count(lat, long, name = "count") %>%
+  ungroup() %>%
+  distinct(lat,long,count) %>%
+  arrange(lat,long) %>%
+  filter(count >= 38) #choose the top 10 spots
+
+POI_less_popular <- anti_join(POI, POI_popular,
+                              by = "lat", "long")
+
+
+########################################
+#Base Layer = Map
+#2nd Layer - Homes
+#3rd Layer - Popular
+#4th Layer - Less Popular
+#########################################
+
+x <- POI_home %>%
+  distinct(id, lat111, long111)
+
+Home_tif_sf <- st_as_sf(x, 
+                   coords = c("long111", "lat111"), 
+                   crs = 4326) %>%
+  st_cast("POINT") #%>%
+
+tmBase1_2 <- tm_shape(bgmap) +
+  tm_rgb(bgmap, r = 1, g = 2, b = 3,
+         alpha = 0.5,
+         saturation = 1,
+         interpolate = TRUE,
+         max.value = 255) +
+  tm_shape(Home_tif_sf) + 
+  tm_dots(size = 0.5,
+          alpha = 0.5,
+          col = "blue",
+          title = "Location",
+          legend.show = TRUE,
+          id = "Click for Details")
+
+#ploting out the popular locations
+POI_Pop_tif_sf <- st_as_sf(POI_popular, 
+                   coords = c("long", "lat"), 
+                   crs = 4326) %>%
+  st_cast("POINT") #%>%
+  #mutate(coordinates = geometry) %>%
+  #mutate(long = trimws(format(round(unlist(coordinates)[1],4))),
+  #       lat = trimws(format(round(unlist(coordinates)[2],4)))) %>%
+  #select(-c(coordinates))
+  #remember to bind the coloumns
+
+tmBase3 <- tmBase1_2 + 
+  tm_shape(POI_Pop_tif_sf) + 
+  tm_dots(size = 0.5,
+          alpha = 0.9,
+          col = "red",
+          title = "Location",
+          legend.show = TRUE,
+          id = "Click for Details")
+
+#ploting out the rest of the locations
+POI_less_tif_sf <- st_as_sf(POI_less_popular, 
+                   coords = c("long", "lat"), 
+                   crs = 4326) %>%
+  st_cast("POINT") #%>%
+  #mutate(coordinates = geometry) %>%
+  #mutate(long = trimws(format(round(unlist(coordinates)[1],4))),
+  #       lat = trimws(format(round(unlist(coordinates)[2],4)))) %>%
+  #select(-c(coordinates))
+  #remember to bind the coloumns
+
+tmOverview <- tmBase3 + 
+  tm_shape(POI_less_tif_sf) + 
+  tm_dots(size = 0.3,
+          alpha = 0.3,
+          col = "black",
+          title = "Location",
+          legend.show = TRUE,
+          id = "Click for Details")
+
+tmap_mode("plot")
+
+tmOverview
+tmap_save(tmOverview, "filename.png")
+
+```
+
+```{r print individual routes, eval=FALSE, include=FALSE}
+########################################
+#Used to call all individual plots
+########################################
+num_emply <- gps %>%
+  distinct(id)
+
+n <- nrow(num_emply)
+
+for(i in 1:n){
+
+  tm <- print_ID_routes_withDate(i, "2014-01-14")
+  
+  pir <- paste("Route of ", i, ".png", sep = "")
+  tmap_save(tm, filename = pir)
+  
+}
+
+```
+
+```{r tmMap Functions, include=FALSE}
+
+plot_ID_routes <- function(emply_id){
+  
+  #filter by ID
+  gps_path_selected <- gps_path %>%
+    filter(id==emply_id)
+  
+  POI_indi <- locations_gps %>%
+    filter(id==emply_id) %>%
+    mutate(stop = Timestamp - lag(Timestamp)) %>%
+    mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
+    filter(parked == TRUE) %>%
+    distinct(lat, long)
+    
+  tif_sf_indi <- st_as_sf(POI_indi, 
+                   coords = c("long", "lat"), 
+                   crs = 4326)
+
+  tm <- tmPOI + 
+    tm_shape(gps_path_selected) + 
+    tm_lines() +
+    tm_shape(tif_sf_indi) + 
+    tm_dots(size = 0.8,
+            alpha = 0.3, 
+            col = "green")
+  
+  pir <- paste("Route of ", emply_id, ".png", sep = "")
+  tmap_save(tm, filename = pir)
+}
+
+print_ID_routes <- function(emply_id){
+  
+  #filter by ID
+  gps_path_selected <- gps_path %>%
+    filter(id==emply_id)
+  
+  POI_indi <- locations_gps %>%
+    filter(id==emply_id) %>%
+    mutate(stop = Timestamp - lag(Timestamp)) %>%
+    mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
+    filter(parked == TRUE) %>%
+    distinct(lat, long)
+    
+  pir <- paste("Route of ", emply_id, ".png", sep = "")
+  
+  tif_sf_indi <- st_as_sf(POI_indi, 
+                   coords = c("long", "lat"), 
+                   crs = 4326)
+
+  tm <- tmPOI + 
+    tm_shape(gps_path_selected) + 
+    tm_lines() +
+    tm_shape(tif_sf_indi) + 
+    tm_dots(size = 0.8,
+            alpha = 0.3, 
+            col = "green")
+  
+  return(tm)
+}  
+
+print_ID_routes_withDate <- function(emply_id, dtmp){
+  
+  gps_sf_t <- gps_sf %>%
+    mutate(Datestamp = as.Date(Timestamp + 60*60*8)) %>%
+    filter(id == emply_id & Datestamp == dtmp)
+
+  ##string to gps path
+  gps_path <- gps_sf_t %>%
+    summarize(m = mean(Timestamp),
+              do_union = FALSE) %>%
+    st_cast("LINESTRING")
+  
+  POI_indi <- locations_gps %>%
+    mutate(Datestamp = as.Date(Timestamp + 60*60*8)) %>%
+    filter(id==emply_id & Datestamp == dtmp) %>%
+    mutate(stop = Timestamp - lag(Timestamp)) %>%
+    mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
+    filter(parked == TRUE) %>%
+    distinct(lat, long)
+    
+  tif_sf_indi <- st_as_sf(POI_indi, 
+                   coords = c("long", "lat"), 
+                   crs = 4326)
+
+  tm <- tmPOI + 
+    tm_shape(gps_path) + 
+    tm_lines() +
+    tm_shape(tif_sf_indi) + 
+    tm_dots(size = 0.8,
+            alpha = 0.3, 
+            col = "green")
+  
+  return(tm)
+} 
+
+print_POI_withDate <- function(dtmp){
+
+  POI_indi <- locations_gps %>%
+    mutate(Datestamp = as.Date(Timestamp + 60*60*8)) %>%
+    filter(Datestamp == dtmp) %>%
+    mutate(stop = Timestamp - lag(Timestamp)) %>%
+    mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
+    filter(parked == TRUE) %>%
+    distinct(lat, long)
+    
+    tif_sf_indi <- st_as_sf(POI_indi, 
+                   coords = c("long", "lat"), 
+                   crs = 4326)
+
+  tm <- tmPOI + 
+    tm_shape(tif_sf_indi) + 
+    tm_dots(size = 0.8,
+            alpha = 0.3, 
+            col = "green")
+  
+  return(tm)
+} 
+
+```
+
+## 4.1 Identifying Places of Interests
+
+It was mentioned that GASTech company vehicles are installed with GPS and *"the vehicles are tracked periodically as long as they are moving"*. With that, as long as the vehicles are in stationary, the GPS would not be tracking the movement. With that, we could analyse the gps data and determine common Places of Interests (POI) by finding our the time lag between each data, grouped by the ID, and analyse all the lat/long coordinates that has a time lag of more than 3 minutes. Since we are analysing for POIs, the accuracy could be in the range of 11.1m, thus, we would only use lat/long up to 4 decimal points.
+
+```{r print POI, echo=FALSE}
+
+tmap_mode("view")
+
+tmPOI
+```
+
+```{r POIs visited, include=FALSE}
+
+
+
+
+records_cc <- cc_data %>%
+  mutate(Datestamp = as.Date(timestamp + 60*60*8)) %>%
+  group_by(last4ccnum, Datestamp) %>%
+  add_count(last4ccnum, Datestamp, name = "Visits on Day") %>%
+  ungroup() %>%
+  rename(Timestamp = timestamp)
+records_cc <- records_cc[c(1,5,4,6,2,3)]
+
+```
+
+## 4.2 Investigating Anomalies using GPS Data
+
+We will attempt to investigate the anomalies by using the GPS data provide. 
+
+### 4.2.1 $10,000 transaction at Frydos Autosupply n’ More
+
+To proceed with the investigation, we will make the following assumptions:
+
++ The GPS receiever was not tampered with.
++ The buyer was driving with a company vehicle to make the transaction.
++ The buyer was not hitching a ride to Frydos Autosupply n’ More
+
+We would a search on the GPS data for 13 Jan 2014, for all vehicles that had parked in the vicinity of Frydos Autosupply n’ More.
+
+### 4.2.2 Credit Card Holder of 2276
+
+It was observed that credit card holder of 2276 made two unusually large transactions on the 14 of Jan 2014 at Nationwide Refinery and Abila Scrapyard. It was observed that he/she had made large transactions across the day, with another transaction of $3,379.21 at Abila Airport.
+
+```{r Profiling cc Users, eval=FALSE, include=FALSE}
+
+#defining a function to find cc profile txn
+numoftxn <- function(cardnum)
+{
+  #get the cc txn
+  cc_p <- cc_data %>%
+    filter(last4ccnum == cardnum)
+  
+  cc_p <- cc_p %>%
+    mutate(day = get_day(timestamp),
+         weekday = weekdays(timestamp))
+
+  cc_p <- cc_p %>%
+    group_by(day, weekday) %>%
+    add_count(day, weekday, name = "No. Txn")
+
+  cc_txn <- cardnum
+  
+  for(i in 6:19){
+    a <- cc_p %>%
+    filter(day == i) %>%
+    distinct(`No. Txn`)
+    
+    ifelse(length(is.na(a$`No. Txn`)) == 0,
+       cc_txn <- append(cc_txn, 0),
+       cc_txn <- append(cc_txn, a$`No. Txn`))
+  }
+  
+  return(cc_txn)
+  rm(cc_txn)
+}
+
+#find the number of distinct cc card users
+cc_number <- cc_data %>%
+  distinct(last4ccnum)
+
+#removing 6691 and 6889 since they are either the same person
+#or 2 person using the same loyalty card
+#Another assumption is that 1 person has 2 cc and 2 loyalty cards
+#but this is an oddball, but be wary
+#cc_number <- cc_number %>%
+#  filter(last4ccnum != 6691 &
+#           last4ccnum != 6899)
+
+cc_num_txn <- setNames(data.frame(matrix(ncol = 15, nrow = 0)), c("last4ccnum", 
+                                                                  "Day 1",
+                                                                  "Day 2",
+                                                                  "Day 3",
+                                                                  "Day 4",
+                                                                  "Day 5",
+                                                                  "Day 6",
+                                                                  "Day 7",
+                                                                  "Day 8",
+                                                                  "Day 9",
+                                                                  "Day 10",
+                                                                  "Day 11",
+                                                                  "Day 12",
+                                                                  "Day 13",
+                                                                  "Day 14"))
+
+n <- nrow(cc_number)
+
+for(i in 1:n){
+  x <- numoftxn(cc_number$last4ccnum[i])
+
+  cc_num_txn <- rbind(cc_num_txn, c(x[1],
+                                    x[2],
+                                    x[3],
+                                    x[4],
+                                    x[5],
+                                    x[6],
+                                    x[7],
+                                    x[8],
+                                    x[9],
+                                    x[10],
+                                    x[11],
+                                    x[12],
+                                    x[13],
+                                    x[14],
+                                    x[15]))
+}
+
+colnames(cc_num_txn)[which(names(cc_num_txn) == "X4795")] <- "last4ccnum"
+colnames(cc_num_txn)[which(names(cc_num_txn) == "X2")] <- "6"
+colnames(cc_num_txn)[which(names(cc_num_txn) == "X3")] <- "7"
+colnames(cc_num_txn)[which(names(cc_num_txn) == "X2.1")] <- "8"
+colnames(cc_num_txn)[which(names(cc_num_txn) == "X3.1")] <- "9"
+colnames(cc_num_txn)[which(names(cc_num_txn) == "X4")] <- "10"
+colnames(cc_num_txn)[which(names(cc_num_txn) == "X2.2")] <- "11"
+colnames(cc_num_txn)[which(names(cc_num_txn) == "X0")] <- "12"
+colnames(cc_num_txn)[which(names(cc_num_txn) == "X3.2")] <- "13"
+colnames(cc_num_txn)[which(names(cc_num_txn) == "X3.3")] <- "14"
+colnames(cc_num_txn)[which(names(cc_num_txn) == "X1")] <- "15"
+colnames(cc_num_txn)[which(names(cc_num_txn) == "X3.4")] <- "16"
+colnames(cc_num_txn)[which(names(cc_num_txn) == "X3.5")] <- "17"
+colnames(cc_num_txn)[which(names(cc_num_txn) == "X1.1")] <- "18"
+colnames(cc_num_txn)[which(names(cc_num_txn) == "X2.3")] <- "19"
+
+
+```
+
+```{r Credit Loyalty Cards, eval=FALSE, include=FALSE}
+##Merging cc_data and loyalty_data 
+
+day_cc_data <- cc_data %>%
+  mutate(day = get_day(timestamp))
+
+day_loyalty_data <- loyalty_data %>%
+  mutate(day = get_day(timestamp))
+
+cc_loyalty_data <- merge(day_cc_data, day_loyalty_data,
+                         by = c("day", "location", "price"),
+                         all.x = TRUE)
+
+data_1286 <- cc_loyalty_data %>%
+  filter(last4ccnum == 1286)
+
+#finding duplicated data caused by merge
+#Reason 1: 1 cc card user uses 2 loyalty cards
+#Reason 2: 1 loyalty card holder uses 2 cc cards
+cc_loyalty_data <- cc_loyalty_data %>%
+    add_count(day, location, price, name = "count")
+
+#filter out all those with duplicates done by merging
+cc_loyalty_data <- cc_loyalty_data %>%
+  filter(count <=1)
+
+#some cc transactions did not use loyalty card
+#we remove them first
+cc_loyalty_data <- cc_loyalty_data %>%
+  filter(!is.na(loyaltynum))
+
+#having a table matching last4ccnum and loyaltynum
+cc_loyalty_binding <- cc_loyalty_data %>%
+  distinct(last4ccnum, loyaltynum)
+
+#check for more than 1 cc
+cc_loyalty_binding <- cc_loyalty_binding %>%
+  add_count(last4ccnum, name = "cc_count")
+
+#remove the cc duplicate
+cc_loyalty_binding <- cc_loyalty_binding %>%
+  filter(cc_count <=1)
+
+#check for more than 1 loyalty card
+cc_loyalty_binding <- cc_loyalty_binding %>%
+  add_count(loyaltynum, name = "lo_count")
+
+#remove the loyalty card duplicate
+cc_loyalty_binding <- cc_loyalty_binding %>%
+  filter(lo_count <=1)
+
+cc_loyalty_data <- cc_data %>%
+  mutate(loyaltynum = "")
+
+#updating the loyalty number with loyalty_cc binding
+cc_loyalty_data$loyaltynum <- cc_loyalty_binding$loyaltynum[match(cc_loyalty_data$last4ccnum, cc_loyalty_binding$last4ccnum)]
+
+#find unidentified loyalty_data
+without_loyalty_data <- cc_loyalty_data %>%
+  filter(is.na(loyaltynum)) %>%
+  distinct(last4ccnum)
+
+without_loyalty_data <- without_loyalty_data$last4ccnum
+
+cc_data_without_loyalty <- cc_data %>%
+  filter(last4ccnum == without_loyalty_data[1]|
+         last4ccnum == without_loyalty_data[2]|
+         last4ccnum == without_loyalty_data[3])
+
+cc_data_without_loyalty <- cc_data_without_loyalty %>%
+  mutate(day = get_day(timestamp))
+
+shared_cc_loyalty <- merge(cc_data_without_loyalty, day_loyalty_data,
+           by = c("day", "location", "price"),
+                         all.x = TRUE)
+
+#discovered 1 user could have used 2 different types of credit cards
+shared_cc_loyalty <- shared_cc_loyalty %>%
+  filter(!is.na(loyaltynum)) %>%
+  distinct(last4ccnum, loyaltynum)
+
+##########################################
+#At this stage, we found out the following:
+#1286 uses 2 loyalty cards, L3288 and L3572
+#L6267 uses 2 credit cards, 6691 and 6889
+##########################################
+
+#adjust the cc_loyalty_binding to remove duplicates
+cc_loyalty_binding <- cc_loyalty_binding %>%
+  filter(loyaltynum != "L3288")
+
+cc_loyalty_binding <- cc_loyalty_binding %>%
+  select(-c(cc_count, lo_count))
+
+cc_loyalty_binding <- rbind(cc_loyalty_binding, shared_cc_loyalty)
+
+colnames(cc_loyalty_binding)[which(names(cc_loyalty_binding) == "last4ccnum")] <- "Credit Card"
+colnames(cc_loyalty_binding)[which(names(cc_loyalty_binding) == "loyaltynum")] <- "Loyalty Card"
+
+#########################################
+#Attentping to find transaction that matches but are distinctly different
+#########################################
+
+questionable_data <- merge(day_cc_data, day_loyalty_data,
+                         by = c("day", "location", "price"),
+                         all.x = TRUE)
+
+#finding duplicated data caused by merge
+#Reason 1: 1 cc card user uses 2 loyalty cards
+#Reason 2: 1 loyalty card holder uses 2 cc cards
+questionable_data <- questionable_data %>%
+    add_count(day, location, price, name = "count")
+
+#filter out all those with duplicates done by merging
+questionable_data <- questionable_data %>%
+  filter(count >1)
+
+questionable_loyalty1 <- loyalty_data %>%
+  filter(location == "Katrina's Café" &
+           price == 26.60 &
+           get_day(timestamp) == 9)
+
+questionable_loyalty2 <- loyalty_data %>%
+  filter(location == "Guy's Gyros" &
+           price == 8.23 &
+           get_day(timestamp) == 9)
+
+questionable_loyalty3 <- loyalty_data %>%
+  filter(location == "Hippokampos" &
+           price == 63.21 &
+           get_day(timestamp) == 11)
+
+problem_data <- rbind(questionable_loyalty1, questionable_loyalty2, questionable_loyalty3)
+
+cc_questionable1 <- cc_data %>%
+  filter(location == "Katrina's Café" &
+           price == 26.60 &
+           get_day(timestamp) == 9)
+
+cc_questionable2 <- cc_data %>%
+  filter(location == "Guy's Gyros" &
+           price == 8.23 &
+           get_day(timestamp) == 9)
+
+cc_questionable3 <- cc_data %>%
+  filter(location == "Hippokampos" &
+           price == 63.21 &
+           get_day(timestamp) == 11)
+
+cc_problem_data <- rbind(cc_questionable1, cc_questionable2, cc_questionable3)
+
+```

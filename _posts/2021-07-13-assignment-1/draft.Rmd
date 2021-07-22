@@ -308,3 +308,81 @@ From the adjusted GPS Lag Interval chart, we know that GPS would usually store i
 ## 4.2 Establishing Point Of Interests (POI)
 
 For this set of raw data, it would be useful to establish a set of coordinates that could be inferred to POIs on the map. To do so, we would examine every set of GPS data and compare it to its location **3 mins later**. If its coordinates are the same, the assumption would be that the vehicle is parked at a location which may be inferred to as POI. And for the identification of POIs, we do not need a set of GPS coordinates that is highly accurate. As such, we would use a set of GPS coordinates that is accurate to the nearest 11.1m.
+
+```{r 10000 transaction, include=FALSE}
+
+txn_time <- date_time_parse("2014-01-13 19:19:00",
+                zone = "",
+                format = "%Y-%m-%d %H:%M")
+
+POI_indi <- locations_gps %>%
+  mutate(Datestamp = as.Date(Timestamp + 60*60*8)) %>%
+  filter(Datestamp == txn_time) %>%
+  mutate(stop = Timestamp - lag(Timestamp)) %>%
+  mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
+  filter(parked == TRUE) %>%
+  filter(lat == 24.86 & long == 36.07) %>%
+  distinct(lat, long)
+    
+  tif_sf_indi <- st_as_sf(POI_indi, 
+                   coords = c("long", "lat"), 
+                   crs = 4326)
+
+  tm <- tmPOI + 
+    tm_shape(tif_sf_indi) + 
+    tm_dots(size = 0.8,
+            alpha = 0.3, 
+            col = "green")
+
+pir <- paste("Route of Fryos ", " on ", as.Date(end_time + 60*60*8),".png", sep = "")
+tmap_save(plot_Fryros, filename = pir)
+
+```
+
+```{r display txn10000 records, echo=FALSE}
+txn10000 <- txn10000[order(txn10000$Timestamp),]
+
+txn10000 %>%
+  kbl() %>%
+  kable_styling()
+```
+
+
+```{r print 33, echo=FALSE}
+plot_txn10000
+```
+
+```{r location records for 9551, echo=FALSE}
+#finding locations with a 2 min buffer around 13/1/14 19:20
+start_time <- date_time_parse("2014-01-13 00:00:00",
+                zone = "",
+                format = "%Y-%m-%d %H:%M")
+
+end_time <- date_time_parse("2014-01-13 23:59:00",
+                zone = "",
+                format = "%Y-%m-%d %H:%M")
+
+txn9551 <- cc_data %>%
+  filter(last4ccnum == 9551) %>%
+  filter(timestamp > start_time & timestamp < end_time) %>%
+  select(timestamp, location, price)
+
+txn9551 %>%
+  kbl() %>%
+  kable_styling()
+```
+
+```{r 2276 txn, echo=FALSE}
+
+txn2276 <- records_cc %>%
+  filter(last4ccnum == 2276 & Datestamp == "2014-01-14") %>%
+  select(-c(Datestamp, last4ccnum, "Visits on Day")) %>%
+  kbl() %>%
+  kable_styling()
+
+txn2276
+
+places14 <- records_POI %>%
+  filter(Datestamp == "2014-01-14" & "Visits on Day" == 3)
+
+```

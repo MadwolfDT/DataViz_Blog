@@ -13,7 +13,7 @@ output:
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(error = FALSE, message = FALSE)
+knitr::opts_chunk$set(error = FALSE, message = FALSE, cache = FALSE)
 ```
 
 ```{r packages, include=FALSE}
@@ -84,6 +84,7 @@ There were a few issues that was needed to be resolved in both csv files.
 
 cc_data <- read_csv("data/cc_data.csv")
 loyalty_data <- read_csv("data/loyalty_data.csv")
+employee_data <- read_csv("data/car-assignments.csv")
 
 #convert timestamp from character into date/time format
 cc_data$timestamp <- date_time_parse(cc_data$timestamp,
@@ -100,13 +101,14 @@ cc_data <- cc_data %>%
   mutate(location = str_replace_all(location,
                                     pattern = "Katerin.+",
                                     replacement = "Katrina\x27s Caf\xe9"))
-#cc_data <- cc_data2
+
 
 loyalty_data <- loyalty_data %>%
   mutate(location = str_replace_all(location,
                                     pattern = "Katerin.+",
                                     replacement = "Katrina\x27s Caf\xe9"))
-#loyalty_data <- loyalty_data2
+
+
 
 ```
 
@@ -593,624 +595,241 @@ gps$Timestamp <- date_time_parse(gps$Timestamp,
               do_union = FALSE) %>%
     st_cast("LINESTRING")
   
-```
-```{r Identify POI, include=FALSE}
-
 #Discover top locations recorded
 locations_gps <- gps 
 
 #Discard the 5th decimal place and have an accuracy of 11.1m
 locations_gps$lat <- round(locations_gps$lat, digits = 4)
 locations_gps$long <- round(locations_gps$long, digits = 4)
+  
+```
+In order to analyse the GPS data more efficiently and effectively, there is a need to determine possible Places of Interests (POIs) in Abila, Kronos. To do so, we can break them down into the following categories:
 
-POI <- locations_gps %>%
++ Homes
++ GASTech Office
++ Popular POIs
++ Other POIs
+
+It was mentioned that GASTech company vehicles are installed with GPS and *"the vehicles are tracked periodically as long as they are moving"*. With that, as long as the vehicles are in stationary, the GPS would not be tracking the movement. With that, we could analyse the gps data and determine common Places of Interests (POI) by finding our the time lag between each data, grouped by the ID, and analyse all the lat/long coordinates that has a time lag of more than 3 minutes. Since we are analysing for POIs, the accuracy could be in the range of 11.1m, thus, we would only use lat/long up to 4 decimal points.
+
+```{r All POIs, include=FALSE}
+
+records_POI <- locations_gps %>%
+  mutate(datestamp = as.Date(Timestamp + 60*60*8)) %>%
   group_by(id) %>%
   mutate(stop = Timestamp - lag(Timestamp)) %>%
   mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
   ungroup() %>%
   filter(parked == TRUE) %>%
-  distinct(lat, long)
+  group_by(id, datestamp) %>%
+  add_count(id, datestamp, name = "visitcount") %>%
+  ungroup() %>%
+  rename(timestamp = Timestamp)
+records_POI <- records_POI[c(1,5,2,8,3,4,6,7)]
 
-#ploting out the locations
-tif_sf <- st_as_sf(POI, 
+d_records_POI <- records_POI %>%
+  distinct(lat,long)
+
+raw_POI_tif_sf <- st_as_sf(d_records_POI, 
                    coords = c("long", "lat"), 
                    crs = 4326) %>%
-  st_cast("POINT") %>%
-  mutate(coordinates = geometry) %>%
-  mutate(long=unlist(coordinates)[1],
-         lat=unlist(coordinates)[2]) %>%
-  select(-c(coordinates))
+  st_cast("POINT") #%>%
 
-tmPOI <- tm_shape(bgmap) +
+tmBase <- tm_shape(bgmap) +
   tm_rgb(bgmap, r = 1, g = 2, b = 3,
          alpha = 0.5,
          saturation = 1,
          interpolate = TRUE,
-         max.value = 255) +
-  tm_shape(tif_sf) + 
-  tm_dots(size = 0.05,
-          alpha = 0.5,
-          col = "red",
-          title = "Location",
-          legend.show = TRUE,
-          id = "Click for Details")
+         max.value = 255)
+
+tmraw_POI <- tmBase +
+  tm_shape(raw_POI_tif_sf) + 
+  tm_dots(size = 0.3,
+          alpha = 1,
+          col = "black")
 
 ```
 
-```{r tmMap Functions, include=FALSE}
 
-plot_ID_routes <- function(emply_id){
-  
-  #filter by ID
-  gps_path_selected <- gps_path %>%
-    filter(id==emply_id)
-  
-  POI_indi <- locations_gps %>%
-    filter(id==emply_id) %>%
-    mutate(stop = Timestamp - lag(Timestamp)) %>%
-    mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
-    filter(parked == TRUE) %>%
-    distinct(lat, long)
-    
-  tif_sf_indi <- st_as_sf(POI_indi, 
-                   coords = c("long", "lat"), 
-                   crs = 4326)
 
-  tm <- tmPOI + 
-    tm_shape(gps_path_selected) + 
-    tm_lines() +
-    tm_shape(tif_sf_indi) + 
-    tm_dots(size = 0.8,
-            alpha = 0.3, 
-            col = "green")
-  
-  pir <- paste("Route of ", emply_id, ".png", sep = "")
-  tmap_save(tm, filename = pir)
-}
-
-print_ID_routes <- function(emply_id){
-  
-  #filter by ID
-  gps_path_selected <- gps_path %>%
-    filter(id==emply_id)
-  
-  POI_indi <- locations_gps %>%
-    filter(id==emply_id) %>%
-    mutate(stop = Timestamp - lag(Timestamp)) %>%
-    mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
-    filter(parked == TRUE) %>%
-    distinct(lat, long)
-    
-  pir <- paste("Route of ", emply_id, ".png", sep = "")
-  
-  tif_sf_indi <- st_as_sf(POI_indi, 
-                   coords = c("long", "lat"), 
-                   crs = 4326)
-
-  tm <- tmPOI + 
-    tm_shape(gps_path_selected) + 
-    tm_lines() +
-    tm_shape(tif_sf_indi) + 
-    tm_dots(size = 0.8,
-            alpha = 0.3, 
-            col = "green")
-  
-  return(tm)
-}  
-
-print_ID_routes_withDate <- function(emply_id, dtmp){
-  
-  gps_sf_t <- gps_sf %>%
-    mutate(Datestamp = as.Date(Timestamp + 60*60*8)) %>%
-    filter(id == emply_id & Datestamp == dtmp)
-
-  ##string to gps path
-  gps_path <- gps_sf_t %>%
-    summarize(m = mean(Timestamp),
-              do_union = FALSE) %>%
-    st_cast("LINESTRING")
-  
-  POI_indi <- locations_gps %>%
-    mutate(Datestamp = as.Date(Timestamp + 60*60*8)) %>%
-    filter(id==emply_id & Datestamp == dtmp) %>%
-    mutate(stop = Timestamp - lag(Timestamp)) %>%
-    mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
-    filter(parked == TRUE) %>%
-    distinct(lat, long)
-    
-  tif_sf_indi <- st_as_sf(POI_indi, 
-                   coords = c("long", "lat"), 
-                   crs = 4326)
-
-  tm <- tmPOI + 
-    tm_shape(gps_path) + 
-    tm_lines() +
-    tm_shape(tif_sf_indi) + 
-    tm_dots(size = 0.8,
-            alpha = 0.3, 
-            col = "green")
-  
-  return(tm)
-} 
-
-print_POI_withDate <- function(dtmp){
-
-  POI_indi <- locations_gps %>%
-    mutate(Datestamp = as.Date(Timestamp + 60*60*8)) %>%
-    filter(Datestamp == dtmp) %>%
-    mutate(stop = Timestamp - lag(Timestamp)) %>%
-    mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
-    filter(parked == TRUE) %>%
-    distinct(lat, long)
-    
-    tif_sf_indi <- st_as_sf(POI_indi, 
-                   coords = c("long", "lat"), 
-                   crs = 4326)
-
-  tm <- tmPOI + 
-    tm_shape(tif_sf_indi) + 
-    tm_dots(size = 0.8,
-            alpha = 0.3, 
-            col = "green")
-  
-  return(tm)
-} 
-
+```{r print raw POI, echo=FALSE}
+tmap_mode("plot")
+tmraw_POI
 ```
+It was observed that there are 265 identified POIs in Abila. As mentioned, the POI may include homes and office. Therefore, we would attempt to segregate out the homes from these POIs. We will filter out locations, for those that had remained parked for 8hours or more.
 
-## 4.1 Identifying Places of Interests
+```{r Finding Homes, include=FALSE}
 
-It was mentioned that GASTech company vehicles are installed with GPS and *"the vehicles are tracked periodically as long as they are moving"*. With that, as long as the vehicles are in stationary, the GPS would not be tracking the movement. With that, we could analyse the gps data and determine common Places of Interests (POI) by finding our the time lag between each data, grouped by the ID, and analyse all the lat/long coordinates that has a time lag of more than 3 minutes. Since we are analysing for POIs, the accuracy could be in the range of 11.1m, thus, we would only use lat/long up to 4 decimal points.
-
-```{r print POI, echo=FALSE}
-
-tmap_mode("view")
-
-tmPOI
-```
-
-```{r POIs visited, include=FALSE}
-
-records_POI <- locations_gps %>%
-  mutate(Datestamp = as.Date(Timestamp + 60*60*8)) %>%
+POI_home <- records_POI %>%
+  filter(stop >= 60*60*8) %>%
+  distinct(id, lat, long) %>%
   group_by(id) %>%
-  mutate(stop = Timestamp - lag(Timestamp)) %>%
-  mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
+  mutate(near_lat = lat - lag(lat),
+         near_long = long - lag(long),
+         lat111 = trunc(lat*1000)/1000,
+         long111 = trunc(long*1000)/1000) %>%
+  group_by(id, lat111, long111) %>%
+  add_count(id, lat111, long111, name = "count") %>%
+  filter(count >= 2) %>%
+  arrange(id, near_lat, near_long) %>%
   ungroup() %>%
-  filter(parked == TRUE) %>%
-  group_by(id, Datestamp) %>%
-  add_count(id, Datestamp, name = "Visits On Day") %>%
-  select(-c(stop, parked)) %>%
-  ungroup()  
+  select(-c("near_lat", "near_long", "count"))
 
-records_cc <- cc_data %>%
-  mutate(Datestamp = as.Date(timestamp + 60*60*8)) %>%
-  group_by(last4ccnum, Datestamp) %>%
-  add_count(last4ccnum, Datestamp, name = "Visits on Day") %>%
-  ungroup()
+#creating a master list with raw data
+POI_raw_master_list <- POI_home %>%
+  mutate(category = "home") %>%
+  left_join(employee_data,
+            by = c("id" = "CarID"))
+
+d_POI_home <- POI_home %>%
+  distinct(id, lat111, long111)
+
+ POI_less_home <- anti_join(records_POI, POI_home,
+                           by = "lat", "long")
+
+d_POI_less_home <- POI_less_home %>%
+  distinct(lat,long)
+
+d_POI_less_home_tif_sf <- st_as_sf(d_POI_less_home, 
+                   coords = c("long", "lat"), 
+                   crs = 4326) %>%
+  st_cast("POINT") #%>%
+
+tmBase <- tm_shape(bgmap) +
+  tm_rgb(bgmap, r = 1, g = 2, b = 3,
+         alpha = 0.5,
+         saturation = 1,
+         interpolate = TRUE,
+         max.value = 255)
+
+tmr_POI <- tmBase +
+  tm_shape(d_POI_less_home_tif_sf) + 
+  tm_dots(size = 0.3,
+          alpha = 1,
+          col = "black")
+
+home_tif_sf <- st_as_sf(d_POI_home, 
+                   coords = c("long111", "lat111"), 
+                   crs = 4326) %>%
+  st_cast("POINT") #%>%
+
+tm_Home <- tmBase +
+  tm_shape(home_tif_sf) + 
+  tm_dots(size = 0.3,
+          alpha = 1,
+          col = "blue")
+
+POI_tm_map <- tmBase +
+  tmr_POI +
+  tm_Home
 
 ```
 
-## 4.2 Investigating Anomalies using GPS Data
-
-We will attempt to investigate the anomalies by using the GPS data provide. 
-
-### 4.2.1 $10,000 transaction at Frydos Autosupply n’ More
-
-```{r 10000 transaction, include=FALSE}
-
-#finding locations with a 2 min buffer around 13/1/14 19:20
-start_time <- date_time_parse("2014-01-13 19:19:00",
-                zone = "",
-                format = "%Y-%m-%d %H:%M")
-
-end_time <- date_time_parse("2014-01-13 19:20:00",
-                zone = "",
-                format = "%Y-%m-%d %H:%M")
-
-txn10000 <- gps %>%
-  filter(Timestamp > start_time & Timestamp < end_time)
-
-plot_txn10000 <- print_ID_routes_withDate(33,as.Date(end_time + 60*60*8))
-
-plot_Fryros <- print_POI_withDate(as.Date(end_time + 60*60*8))
-
-pir <- paste("Route of Fryos ", " on ", as.Date(end_time + 60*60*8),".png", sep = "")
-tmap_save(plot_Fryros, filename = pir)
-
-```
-To proceed with the investigation, we will make the following assumptions:
-
-+ The GPS receiever was not tampered with.
-+ The buyer was driving with a company vehicle to make the transaction.
-+ The buyer was not hitching a ride to Frydos Autosupply n’ More
-
-We would a search on the GPS data for 13 Jan 2014, for all vehicles that had parked in the vicinity of Frydos Autosupply n’ More.
-
-```{r display txn10000 records, echo=FALSE}
-txn10000 <- txn10000[order(txn10000$Timestamp),]
-
-txn10000 %>%
-  kbl() %>%
-  kable_styling()
+```{r print POI and homes, echo=FALSE}
+tmap_mode("plot")
+POI_tm_map
 ```
 
-It was discovered the the vehicle with ID=33 was within the vicinity of transaction. We will proceed to plot the route for ID=33 on 13 Jan 2014 and match it against the transaction records for 9551.
+While there are only 35 employees with assigned car in question, there are 40 locations plotted on the map, where the employees had spent more than 8hrs at. That could mean that 5 **additional** places, occupied by the employees for more than 8 hours, exists. 
 
-```{r print 33, echo=FALSE}
-plot_txn10000
-```
+```{r group homes to employee, include=FALSE}
 
-```{r location records for 9551, echo=FALSE}
-#finding locations with a 2 min buffer around 13/1/14 19:20
-start_time <- date_time_parse("2014-01-13 00:00:00",
-                zone = "",
-                format = "%Y-%m-%d %H:%M")
-
-end_time <- date_time_parse("2014-01-13 23:59:00",
-                zone = "",
-                format = "%Y-%m-%d %H:%M")
-
-txn9551 <- cc_data %>%
-  filter(last4ccnum == 9551) %>%
-  filter(timestamp > start_time & timestamp < end_time) %>%
-  select(timestamp, location, price)
-
-txn9551 %>%
-  kbl() %>%
-  kable_styling()
-```
-
-```{r print individual routes, eval=FALSE, include=FALSE}
-
-
-
-num_emply <- gps %>%
-  distinct(id)
-
-n <- nrow(num_emply)
-
-num_emply <- num_emply$id
-
-gps_sf <- st_as_sf(gps,
-                   coords = c("long", "lat"),
-                   crs = 4326)
-
-gps_path <- gps_sf %>%
+emply_2homes <- left_join(d_POI_home, employee_data,
+                              by = c("id" = "CarID")) %>%
   group_by(id) %>%
-  summarize(m = mean(Timestamp),
-            do_union = FALSE) %>%
-  st_cast("LINESTRING")
+  add_count(id, name = "count") %>%
+  ungroup() %>%
+  filter(count >= 2) %>%
+  select(-c(count)) %>%
+  rename(lat = lat111, long = long111)
+
+clean_d_POI_home <- anti_join(d_POI_home, emply_2homes)
+
+```
+
+```{r print suspicious employees 2 homes, echo=FALSE}
+
+sus_emply_2 <- st_as_sf(emply_2homes, 
+                   coords = c("long", "lat"), 
+                   crs = 4326) %>%
+  st_cast("POINT") #%>%
+
+sus_emply_2$id <- factor(sus_emply_2$id)
 
 tmap_mode("plot")
 
-########################################
-#Used to call all individual plots
-########################################
+tmsus <- tmBase +
+  tm_shape(sus_emply_2) + 
+  tm_dots(size = 0.5,
+          col = "id", 
+          palette=c(A='blue', B='green', C='red'))
 
-#for(i in 1:n){
-#  
-#  plot_ID_routes(num_emply[i])
-#  
-#}
+tmsus
 
-```
-
-```{r Profiling cc Users, eval=FALSE, include=FALSE}
-
-#defining a function to find cc profile txn
-numoftxn <- function(cardnum)
-{
-  #get the cc txn
-  cc_p <- cc_data %>%
-    filter(last4ccnum == cardnum)
+sus_emply_2 %>%
+  kbl() %>%
+  kable_styling()
   
-  cc_p <- cc_p %>%
-    mutate(day = get_day(timestamp),
-         weekday = weekdays(timestamp))
+```
 
-  cc_p <- cc_p %>%
-    group_by(day, weekday) %>%
-    add_count(day, weekday, name = "No. Txn")
+From the map and table, it could be inferred that:
 
-  cc_txn <- cardnum
+* Lucas Alcazar has only 1 location where he usually spend more than 8hrs and that is lat/long of (36.067/24.886)
+* Hennie OSavaldo spends more than 8hrs at 2 locations, and that is lat/long:
+
+  + 36.060/ 24.905
+  + 36.063/ 24.896
+
+* Isande Borrasca spends more than 8hrs at 2 distinct locations, and that is lat/long:
+
+  + 36.052/ 24.876
+  + 36.072/ 24.875
   
-  for(i in 6:19){
-    a <- cc_p %>%
-    filter(day == i) %>%
-    distinct(`No. Txn`)
-    
-    ifelse(length(is.na(a$`No. Txn`)) == 0,
-       cc_txn <- append(cc_txn, 0),
-       cc_txn <- append(cc_txn, a$`No. Txn`))
-  }
-  
-  return(cc_txn)
-  rm(cc_txn)
-}
+```{r add 3 employees, include=FALSE}
 
-#find the number of distinct cc card users
-cc_number <- cc_data %>%
-  distinct(last4ccnum)
+x <- data.frame(8, 36.067, 24.886)
+names(x) <- c("id", "lat111", "long111")
 
-#removing 6691 and 6889 since they are either the same person
-#or 2 person using the same loyalty card
-#Another assumption is that 1 person has 2 cc and 2 loyalty cards
-#but this is an oddball, but be wary
-#cc_number <- cc_number %>%
-#  filter(last4ccnum != 6691 &
-#           last4ccnum != 6899)
+y <- data.frame(21, 36.060, 24.905)
+names(y) <- c("id", "lat111", "long111")
 
-cc_num_txn <- setNames(data.frame(matrix(ncol = 15, nrow = 0)), c("last4ccnum", 
-                                                                  "Day 1",
-                                                                  "Day 2",
-                                                                  "Day 3",
-                                                                  "Day 4",
-                                                                  "Day 5",
-                                                                  "Day 6",
-                                                                  "Day 7",
-                                                                  "Day 8",
-                                                                  "Day 9",
-                                                                  "Day 10",
-                                                                  "Day 11",
-                                                                  "Day 12",
-                                                                  "Day 13",
-                                                                  "Day 14"))
+y1 <- data.frame(21, 36.063, 24.896)
+names(y1) <- c("id", "lat111", "long111")
 
-n <- nrow(cc_number)
+z <- data.frame(28, 36.052, 24.876)
+names(z) <- c("id", "lat111", "long111")
 
-for(i in 1:n){
-  x <- numoftxn(cc_number$last4ccnum[i])
+z1 <- data.frame(28, 36.072, 24.875)
+names(z1) <- c("id", "lat111", "long111")
 
-  cc_num_txn <- rbind(cc_num_txn, c(x[1],
-                                    x[2],
-                                    x[3],
-                                    x[4],
-                                    x[5],
-                                    x[6],
-                                    x[7],
-                                    x[8],
-                                    x[9],
-                                    x[10],
-                                    x[11],
-                                    x[12],
-                                    x[13],
-                                    x[14],
-                                    x[15]))
-}
-
-colnames(cc_num_txn)[which(names(cc_num_txn) == "X4795")] <- "last4ccnum"
-colnames(cc_num_txn)[which(names(cc_num_txn) == "X2")] <- "6"
-colnames(cc_num_txn)[which(names(cc_num_txn) == "X3")] <- "7"
-colnames(cc_num_txn)[which(names(cc_num_txn) == "X2.1")] <- "8"
-colnames(cc_num_txn)[which(names(cc_num_txn) == "X3.1")] <- "9"
-colnames(cc_num_txn)[which(names(cc_num_txn) == "X4")] <- "10"
-colnames(cc_num_txn)[which(names(cc_num_txn) == "X2.2")] <- "11"
-colnames(cc_num_txn)[which(names(cc_num_txn) == "X0")] <- "12"
-colnames(cc_num_txn)[which(names(cc_num_txn) == "X3.2")] <- "13"
-colnames(cc_num_txn)[which(names(cc_num_txn) == "X3.3")] <- "14"
-colnames(cc_num_txn)[which(names(cc_num_txn) == "X1")] <- "15"
-colnames(cc_num_txn)[which(names(cc_num_txn) == "X3.4")] <- "16"
-colnames(cc_num_txn)[which(names(cc_num_txn) == "X3.5")] <- "17"
-colnames(cc_num_txn)[which(names(cc_num_txn) == "X1.1")] <- "18"
-colnames(cc_num_txn)[which(names(cc_num_txn) == "X2.3")] <- "19"
-
+distinct_homes <- rbind(clean_d_POI_home, x, y, z, y1, z1)
 
 ```
 
-```{r Plotting Txn by Users, eval=FALSE, include=FALSE}
+After cleaning, the locations where the employees, with assigned cars, have spent more than 8 hours, are plotted in the map in blue.
 
-stack_cc_num_txn <- data.frame(cc_num_txn[1:1], stack(cc_num_txn[2:ncol(cc_num_txn)]))
+```{r cleaned homes, echo=FALSE}
 
-colnames(stack_cc_num_txn)[which(names(stack_cc_num_txn) == "ind")] <- "day"
-colnames(stack_cc_num_txn)[which(names(stack_cc_num_txn) == "values")] <- "count"
-colnames(stack_cc_num_txn)[which(names(stack_cc_num_txn) == "last4num")] <- "last4ccnum"
+distinct_homes_as_sf <- st_as_sf(distinct_homes, 
+                   coords = c("long111", "lat111"), 
+                   crs = 4326) %>%
+  st_cast("POINT") #%>%
 
-p <-ggplot(stack_cc_num_txn,
-       aes(day, count)) + 
-  geom_boxplot_interactive(
-    aes(tooltip = last4ccnum))
+tmap_mode("plot")
 
-girafe(
-  ggobj = p,
-  width_svg = 6,
-  height_svg = 6*0.618
-)
+tm_homes_POI <- tmBase +
+  tmr_POI + 
+  tm_shape(distinct_homes_as_sf) + 
+  tm_dots(size = 0.5,
+          col = "blue")
 
-```
-
-```{r Plotting Paths, eval=FALSE, include=FALSE}
-
-gps$Timestamp <- date_time_parse(gps$Timestamp,
-                zone = "",
-                format = "%m/%d/%Y %H:%M:%S")
-
-gps$id <- as_factor(gps$id)
-
-##view(gps)
-
-gps_sf <- st_as_sf(gps,
-                   coords = c("long", "lat"),
-                   crs = 4326)
-
-##view(gps_sf)
-
-gps_path <- gps_sf %>%
-  group_by(id) %>%
-  summarize(m = mean(Timestamp),
-            do_union = FALSE) %>%
-  st_cast("LINESTRING")
-
-##view(gps_path)
-
-gps_path_selected <- gps_path %>%
-  filter(id==1)
-tmap_mode("view")
-tm_shape(bgmap) + 
-  tm_rgb(bgmap, r = 1, g = 2, b = 3,
-         alpha = NA,
-         saturation = 1,
-         interpolate = TRUE,
-         max.value = 255) + 
-  tm_shape(gps_path_selected) + 
-  tm_lines()
-
-```
-
-```{r Credit Loyalty Cards, eval=FALSE, include=FALSE}
-##Merging cc_data and loyalty_data 
-
-day_cc_data <- cc_data %>%
-  mutate(day = get_day(timestamp))
-
-day_loyalty_data <- loyalty_data %>%
-  mutate(day = get_day(timestamp))
-
-cc_loyalty_data <- merge(day_cc_data, day_loyalty_data,
-                         by = c("day", "location", "price"),
-                         all.x = TRUE)
-
-data_1286 <- cc_loyalty_data %>%
-  filter(last4ccnum == 1286)
-
-#finding duplicated data caused by merge
-#Reason 1: 1 cc card user uses 2 loyalty cards
-#Reason 2: 1 loyalty card holder uses 2 cc cards
-cc_loyalty_data <- cc_loyalty_data %>%
-    add_count(day, location, price, name = "count")
-
-#filter out all those with duplicates done by merging
-cc_loyalty_data <- cc_loyalty_data %>%
-  filter(count <=1)
-
-#some cc transactions did not use loyalty card
-#we remove them first
-cc_loyalty_data <- cc_loyalty_data %>%
-  filter(!is.na(loyaltynum))
-
-#having a table matching last4ccnum and loyaltynum
-cc_loyalty_binding <- cc_loyalty_data %>%
-  distinct(last4ccnum, loyaltynum)
-
-#check for more than 1 cc
-cc_loyalty_binding <- cc_loyalty_binding %>%
-  add_count(last4ccnum, name = "cc_count")
-
-#remove the cc duplicate
-cc_loyalty_binding <- cc_loyalty_binding %>%
-  filter(cc_count <=1)
-
-#check for more than 1 loyalty card
-cc_loyalty_binding <- cc_loyalty_binding %>%
-  add_count(loyaltynum, name = "lo_count")
-
-#remove the loyalty card duplicate
-cc_loyalty_binding <- cc_loyalty_binding %>%
-  filter(lo_count <=1)
-
-cc_loyalty_data <- cc_data %>%
-  mutate(loyaltynum = "")
-
-#updating the loyalty number with loyalty_cc binding
-cc_loyalty_data$loyaltynum <- cc_loyalty_binding$loyaltynum[match(cc_loyalty_data$last4ccnum, cc_loyalty_binding$last4ccnum)]
-
-#find unidentified loyalty_data
-without_loyalty_data <- cc_loyalty_data %>%
-  filter(is.na(loyaltynum)) %>%
-  distinct(last4ccnum)
-
-without_loyalty_data <- without_loyalty_data$last4ccnum
-
-cc_data_without_loyalty <- cc_data %>%
-  filter(last4ccnum == without_loyalty_data[1]|
-         last4ccnum == without_loyalty_data[2]|
-         last4ccnum == without_loyalty_data[3])
-
-cc_data_without_loyalty <- cc_data_without_loyalty %>%
-  mutate(day = get_day(timestamp))
-
-shared_cc_loyalty <- merge(cc_data_without_loyalty, day_loyalty_data,
-           by = c("day", "location", "price"),
-                         all.x = TRUE)
-
-#discovered 1 user could have used 2 different types of credit cards
-shared_cc_loyalty <- shared_cc_loyalty %>%
-  filter(!is.na(loyaltynum)) %>%
-  distinct(last4ccnum, loyaltynum)
-
-##########################################
-#At this stage, we found out the following:
-#1286 uses 2 loyalty cards, L3288 and L3572
-#L6267 uses 2 credit cards, 6691 and 6889
-##########################################
-
-#adjust the cc_loyalty_binding to remove duplicates
-cc_loyalty_binding <- cc_loyalty_binding %>%
-  filter(loyaltynum != "L3288")
-
-cc_loyalty_binding <- cc_loyalty_binding %>%
-  select(-c(cc_count, lo_count))
-
-cc_loyalty_binding <- rbind(cc_loyalty_binding, shared_cc_loyalty)
-
-colnames(cc_loyalty_binding)[which(names(cc_loyalty_binding) == "last4ccnum")] <- "Credit Card"
-colnames(cc_loyalty_binding)[which(names(cc_loyalty_binding) == "loyaltynum")] <- "Loyalty Card"
-
-#########################################
-#Attentping to find transaction that matches but are distinctly different
-#########################################
-
-questionable_data <- merge(day_cc_data, day_loyalty_data,
-                         by = c("day", "location", "price"),
-                         all.x = TRUE)
-
-#finding duplicated data caused by merge
-#Reason 1: 1 cc card user uses 2 loyalty cards
-#Reason 2: 1 loyalty card holder uses 2 cc cards
-questionable_data <- questionable_data %>%
-    add_count(day, location, price, name = "count")
-
-#filter out all those with duplicates done by merging
-questionable_data <- questionable_data %>%
-  filter(count >1)
-
-questionable_loyalty1 <- loyalty_data %>%
-  filter(location == "Katrina's Café" &
-           price == 26.60 &
-           get_day(timestamp) == 9)
-
-questionable_loyalty2 <- loyalty_data %>%
-  filter(location == "Guy's Gyros" &
-           price == 8.23 &
-           get_day(timestamp) == 9)
-
-questionable_loyalty3 <- loyalty_data %>%
-  filter(location == "Hippokampos" &
-           price == 63.21 &
-           get_day(timestamp) == 11)
-
-problem_data <- rbind(questionable_loyalty1, questionable_loyalty2, questionable_loyalty3)
-
-cc_questionable1 <- cc_data %>%
-  filter(location == "Katrina's Café" &
-           price == 26.60 &
-           get_day(timestamp) == 9)
-
-cc_questionable2 <- cc_data %>%
-  filter(location == "Guy's Gyros" &
-           price == 8.23 &
-           get_day(timestamp) == 9)
-
-cc_questionable3 <- cc_data %>%
-  filter(location == "Hippokampos" &
-           price == 63.21 &
-           get_day(timestamp) == 11)
-
-cc_problem_data <- rbind(cc_questionable1, cc_questionable2, cc_questionable3)
+tm_homes_POI
 
 ```
 
 # 5. Inferring Owners of Each Credit Card with Loyalty Card
+
+
 
 ```{r Q3 DataTable, eval=FALSE, include=FALSE}
 
