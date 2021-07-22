@@ -815,12 +815,24 @@ distinct_homes_as_sf <- st_as_sf(distinct_homes,
                    crs = 4326) %>%
   st_cast("POINT") #%>%
 
-tmap_mode("plot")
+x <- left_join(distinct_homes_as_sf, employee_data,
+               by = c("id" = "CarID")) %>%
+  select(-c(CurrentEmploymentType)) %>%
+  rename("Last Name" = "LastName",
+         "First Name" = "FirstName",
+         "Job Appointment" = "CurrentEmploymentTitle")
+
+x <- x[c(5,4,3,1,2)]
+
+tmap_mode("view")
 
 tm_homes_POI <- tmBase +
-  tmr_POI + 
-  tm_shape(distinct_homes_as_sf) + 
-  tm_dots(size = 0.5,
+  tm_shape(d_POI_less_home_tif_sf) + 
+  tm_dots(size = 0.05,
+          alpha = 1,
+          col = "black") +
+  tm_shape(x) + 
+  tm_dots(size = 0.05,
           col = "blue")
 
 tm_homes_POI
