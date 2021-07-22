@@ -841,7 +841,7 @@ x <- left_join(x, employee_data,
 
 x <- select(x, -c("CurrentEmploymentType"))
 
-x <- x[c(8,7,6,4,5,2,1,3)]
+x <- x[c(1,8,7,6,4,5,2,3)]
 
 d_cfm_home_POI_tif_sf <- x
 
@@ -887,35 +887,28 @@ tmap_leaflet(x)
 
 From the map and table, it could be inferred that:
 
-* Lucas Alcazar has only 1 location where he usually spend more than 8hrs and that is lat/long of (36.067/24.886)
-* Hennie OSavaldo spends more than 8hrs at 2 locations, and that is lat/long:
-
-  + 36.060/ 24.905
-  + 36.063/ 24.896
-
-* Isande Borrasca spends more than 8hrs at 2 distinct locations, and that is lat/long:
-
-  + 36.052/ 24.876
-  + 36.072/ 24.875
+* Adra Nubarron (id = 22) and Felix Resumir (id = 30) may be related and staying the the same residence.
+  + Lat: 36.0584, Long: 24.9010
   
-After cleaning, the locations where the employees, with assigned cars, have spent more than 8 hours, are plotted in the map in blue.
+* Hennie Osvaldo (id = 21) was observed to be at 2 distinct locations (> 8hrs) in the past 2 weeks.
+  + Lat: 36.0603, Long: 24.9056
+  + Lat: 36.0633, Long: 24.8961
 
-```{r cleaned homes, echo=FALSE}
+* Isande Borrasca (id = 28) was observed to be at 2 distinct locations (> 8hrs) in the past 2 weeks.
+  + Lat: 36.0732, Long: 24.8759
+  + Lat: 36.0524, Long: 24.8761
 
+* Kanon Herrero (id = 25) was observed to be at 2 distinct locations (> 8hrs) in the past 2 weeks.
+  + Lat: 36.0529, Long: 24.8494
+  + Lat: 36.0594, Long: 24.8948 (shares residence with Bertrand Ovan, id = 29 and Linnea Bergen, id = 6)
 
-```
+* Gustav Cazar (id = 9) was observed to be at 5 distinct locations (> 8hrs) in the past 2 weeks.
+  + Lat: 36.0696, Long: 24.8702
+  + Lat: 36.0767, Long: 24.8576
+  + Lat: 36.0804, Long: 24.8549
+  + Lat: 36.0817, Long: 24.8510
+  + Lat: 36.0842, Long: 24.8564
 
-We will attempt to find the popular POIs that have cars parked for more than 28 days over the past 14 days.
-
-
-```{r finding popular POI, include=FALSE}
-
-
-```
-
-```{r plot pop POI, echo=FALSE}
-
-```
 
 # 5. Inferring Owners of Each Credit Card with Loyalty Card
 
