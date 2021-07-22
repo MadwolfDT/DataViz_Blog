@@ -754,9 +754,118 @@ x <- tmBase +
 x
 ```
 
-```{r sort out homes}
+```{r sort out homes, include=FALSE}
+
+d_home_or_office_POI <- d_home_POI %>%
+  group_by(id) %>%
+  add_count(id, name = "count") %>%
+  ungroup() %>%
+  filter(count >= 2) %>%
+  select(-c(count))
+
+d_cfm_home_POI <- d_home_POI %>%
+  group_by(id) %>%
+  add_count(id, name = "count") %>%
+  ungroup() %>%
+  mutate(category = "Home") %>%
+  filter(count ==1 ) %>%
+  select(-c(count))
+d_cfm_home_POI$category <- ifelse(d_cfm_home_POI$id > 100, "Office", d_cfm_home_POI$category)
+
+distinct_home_or_office <- d_home_or_office_POI %>%
+  group_by(lat, long) %>%
+  add_count(lat, long, name = "count") %>%
+  ungroup()
+
+add_1 <- d_home_or_office_POI %>%
+  filter(id == 1) %>%
+  mutate(category = "Home")
+add_1 <- add_1[-1,]
+
+add_5 <- d_home_or_office_POI %>%
+  filter(id == 5) %>%
+  mutate(category = "Home")
+add_5 <- add_5[-1,]
+
+add_6 <- d_home_or_office_POI %>%
+  filter(id == 6) %>%
+  mutate(category = "Home")
+add_6 <- add_6[-1,]
+
+add_17 <- d_home_or_office_POI %>%
+  filter(id == 17) %>%
+  mutate(category = "Home")
+add_17 <- add_17[-1,]
+
+add_22 <- d_home_or_office_POI %>% #share residence with 30?
+  filter(id == 22) %>%
+  mutate(category = "Home")
+add_22 <- add_22[-1,]
+
+add_30 <- d_home_or_office_POI %>% #share residence with 22?
+  filter(id == 30) %>%
+  mutate(category = "Home")
+add_30 <- add_30[-1,]
+
+add_25 <- d_home_or_office_POI %>% #2 residences?
+  filter(id == 25) %>%
+  mutate(category = "Unknown")
+
+add_9 <- d_home_or_office_POI %>% #5 places?
+  filter(id == 9) %>%
+  mutate(category = "Unknown")
+
+add_21 <- d_home_or_office_POI %>% #2 places?
+  filter(id == 21) %>%
+  mutate(category = "Unknown")
+
+add_28 <- d_home_or_office_POI %>% #2 places?
+  filter(id == 28) %>%
+  mutate(category = "Unknown")
+
+x <- rbind(d_cfm_home_POI, add_1, add_17, add_21, add_22, add_25, add_28, add_30, add_5, add_6, add_9)
+
+d_cfm_home_POI <- x
+
+d_cfm_home_POI_tif_sf <- st_as_sf(d_cfm_home_POI, 
+                   coords = c("long", "lat"), 
+                   crs = 4326) %>%
+  select(-c(datestamp, lat111, long111,stop, parked, visitcount, near_lat, near_long, drop)) %>%
+  st_cast("POINT") #%>%
+  
+x <- left_join(d_cfm_home_POI_tif_sf, d_home_POI, by = c("timestamp", "id")) %>%
+  select(-c(datestamp, lat111, long111,stop, parked, visitcount, near_lat, near_long,drop))
+
+d_cfm_home_POI_tif_sf <- x
 
 
+tm_d_cfm_home_POI_i <- tm_shape(d_cfm_home_POI_tif_sf) + 
+  tm_dots(size = 0.05,
+          col = "category",
+          palette = c("red", "blue", "green"))
+
+tm_d_cfm_home_POI <- tm_shape(d_cfm_home_POI_tif_sf) + 
+  tm_dots(size = 0.3,
+          alpha = 1,
+          col = "category",
+          palette = c("red", "blue", "green"))
+
+```
+
+It was determined that GASTech location is at (36.0480/ 24.8796) because there are high frequency counts by 6 of the employees, suggesting that the following 6 employees have stayed for more than 8 hours in office, at least once, during the past 2 weeks.
+
++ Nils Calixto, IT Helpdesk
++ Isak Baza, IT Technican
++ Linnea Bergen, IT Group Manager
++ Sven Flecha, IT Technican
++ Adra Nubarron, Badging Office
++ Felix Resumir, Security Group Manager
+
+
+```{r home or office}
+tmap_mode("view")
+x <- tmBase_i + tm_d_cfm_home_POI_i
+x
 ```
 
 
