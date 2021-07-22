@@ -834,7 +834,14 @@ d_cfm_home_POI_tif_sf <- st_as_sf(d_cfm_home_POI,
   st_cast("POINT") #%>%
   
 x <- left_join(d_cfm_home_POI_tif_sf, d_home_POI, by = c("timestamp", "id")) %>%
-  select(-c(datestamp, lat111, long111,stop, parked, visitcount, near_lat, near_long,drop))
+  select(-c(datestamp, lat111, long111,stop, parked, visitcount, near_lat, near_long,drop, timestamp))
+
+x <- left_join(x, employee_data,
+               by = c("id" = "CarID"))
+
+x <- select(x, -c("CurrentEmploymentType"))
+
+x <- x[c(8,7,6,4,5,2,1,3)]
 
 d_cfm_home_POI_tif_sf <- x
 
@@ -850,6 +857,11 @@ tm_d_cfm_home_POI <- tm_shape(d_cfm_home_POI_tif_sf) +
           col = "category",
           palette = c("red", "blue", "green"))
 
+tm_d_cfm_home_POI_labels <- tm_shape(d_cfm_home_POI_tif_sf) + 
+  tm_dots(size = 0.1,
+          alpha = 0,
+          col = "blue")
+
 ```
 
 It was determined that GASTech location is at (36.0480/ 24.8796) because there are high frequency counts by 6 of the employees, suggesting that the following 6 employees have stayed for more than 8 hours in office, at least once, during the past 2 weeks.
@@ -864,8 +876,8 @@ It was determined that GASTech location is at (36.0480/ 24.8796) because there a
 
 ```{r home or office}
 tmap_mode("view")
-x <- tmBase_i + tm_d_cfm_home_POI_i
-x
+x <- tmBase_i + tm_d_cfm_home_POI_i + tm_d_cfm_home_POI_labels
+tmap_leaflet(x)
 ```
 
 
