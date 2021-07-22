@@ -619,18 +619,20 @@ records_POI <- locations_gps %>%
   group_by(id) %>%
   mutate(stop = Timestamp - lag(Timestamp)) %>%
   mutate(parked = ifelse(stop >60*3, TRUE,FALSE)) %>%
+  mutate(lat111 = trunc(lat*1000)/1000,
+         long111 = trunc(long*1000)/1000) %>%
   ungroup() %>%
   filter(parked == TRUE) %>%
   group_by(id, datestamp) %>%
   add_count(id, datestamp, name = "visitcount") %>%
   ungroup() %>%
   rename(timestamp = Timestamp)
-records_POI <- records_POI[c(1,5,2,8,3,4,6,7)]
+records_POI <- records_POI[c(1,5,2,3,4,8,9,6,7,10)]
 
 d_records_POI <- records_POI %>%
-  distinct(lat,long)
+  distinct(lat,long, .keep_all = TRUE)
 
-raw_POI_tif_sf <- st_as_sf(d_records_POI, 
+d_POI_tif_sf <- st_as_sf(d_records_POI, 
                    coords = c("long", "lat"), 
                    crs = 4326) %>%
   st_cast("POINT") #%>%
@@ -642,8 +644,8 @@ tmBase <- tm_shape(bgmap) +
          interpolate = TRUE,
          max.value = 255)
 
-tmraw_POI <- tmBase +
-  tm_shape(raw_POI_tif_sf) + 
+tmrd_records_POI <- tmBase +
+  tm_shape(d_POI_tif_sf) + 
   tm_dots(size = 0.3,
           alpha = 1,
           col = "black")
@@ -654,122 +656,112 @@ tmraw_POI <- tmBase +
 
 ```{r print raw POI, echo=FALSE}
 tmap_mode("plot")
-tmraw_POI
+tmrd_records_POI
 ```
 It was observed that there are 265 identified POIs in Abila. As mentioned, the POI may include homes and office. Therefore, we would attempt to segregate out the homes from these POIs. We will filter out locations, for those that had remained parked for 8hours or more.
 
 ```{r Finding Homes, include=FALSE}
 
-POI_home <- records_POI %>%
+home_POI <- records_POI %>%
   filter(stop >= 60*60*8) %>%
-  distinct(id, lat, long) %>%
+  distinct(id, lat, long, .keep_all = TRUE) %>%
   group_by(id) %>%
+  arrange(id, lat, long) %>%
   mutate(near_lat = lat - lag(lat),
          near_long = long - lag(long),
          lat111 = trunc(lat*1000)/1000,
          long111 = trunc(long*1000)/1000) %>%
-  group_by(id, lat111, long111) %>%
-  add_count(id, lat111, long111, name = "count") %>%
-  filter(count >= 2) %>%
-  arrange(id, near_lat, near_long) %>%
-  ungroup() %>%
-  select(-c("near_lat", "near_long", "count"))
+  mutate(drop = ifelse(is.na(near_lat),FALSE,
+                       ifelse(between(near_lat, -0.0001,0.0001),
+                              ifelse(between(near_long, -0.0001,0.0001), TRUE, FALSE),
+                              ifelse(between(near_long, -0.0001,0.0001),TRUE, FALSE))))
+############################################
+#Aggregating ID = 28
+############################################
+x <- home_POI %>%
+  filter(id != 28)
 
-#creating a master list with raw data
-POI_raw_master_list <- POI_home %>%
-  mutate(category = "home") %>%
-  left_join(employee_data,
-            by = c("id" = "CarID"))
+y <- home_POI %>%
+  filter(id==28)
 
-d_POI_home <- POI_home %>%
-  distinct(id, lat111, long111)
+y$drop <- TRUE
+y$drop <- ifelse(y$lat == 36.0732 & y$long == 24.8759,FALSE, y$drop)
+y$drop <- ifelse(y$lat == 36.0524 & y$long == 24.8761,FALSE, y$drop)
 
- POI_less_home <- anti_join(records_POI, POI_home,
-                           by = "lat", "long")
+x <- rbind(x, y)
 
-d_POI_less_home <- POI_less_home %>%
-  distinct(lat,long)
+home_POI <- x
+##############################################
 
-d_POI_less_home_tif_sf <- st_as_sf(d_POI_less_home, 
+d_home_POI <- home_POI %>%
+  filter(drop == FALSE)
+
+d_home_POI_tif_sf <- st_as_sf(d_home_POI, 
                    coords = c("long", "lat"), 
                    crs = 4326) %>%
+  select(-c(datestamp, lat111, long111,stop, parked, visitcount, near_lat, near_long,drop)) %>%
   st_cast("POINT") #%>%
+  
+x <- left_join(d_home_POI_tif_sf, d_home_POI, by = c("timestamp", "id")) %>%
+  select(-c(datestamp, lat111, long111,stop, parked, visitcount, near_lat, near_long,drop))
 
-tmBase <- tm_shape(bgmap) +
+d_home_POI_tif_sf <- x
+
+tmBase_i <- tm_shape(bgmap) +
   tm_rgb(bgmap, r = 1, g = 2, b = 3,
          alpha = 0.5,
          saturation = 1,
          interpolate = TRUE,
          max.value = 255)
 
-tmr_POI <- tmBase +
-  tm_shape(d_POI_less_home_tif_sf) + 
-  tm_dots(size = 0.3,
+tm_home_POI_i <- tmBase +
+  tm_shape(d_home_POI_tif_sf) + 
+  tm_dots(size = 0.05,
           alpha = 1,
-          col = "black")
+          col = "blue")
 
-home_tif_sf <- st_as_sf(d_POI_home, 
-                   coords = c("long111", "lat111"), 
-                   crs = 4326) %>%
-  st_cast("POINT") #%>%
-
-tm_Home <- tmBase +
-  tm_shape(home_tif_sf) + 
+tm_home_POI <- tmBase +
+  tm_shape(d_home_POI_tif_sf) + 
   tm_dots(size = 0.3,
           alpha = 1,
           col = "blue")
 
-POI_tm_map <- tmBase +
-  tmr_POI +
-  tm_Home
-
 ```
 
 ```{r print POI and homes, echo=FALSE}
+tmap_mode("view")
+x <- tmBase_i + tm_home_POI_i
+x
+```
+
+There are a total of 53 distinct locations which had GPS-marked vehicles parked for more than 8 hours. They can be a mixture of offices or homes. In addition, it was observed that **Isande Borrasca**, a Drill Technician with GASTech had numerous locations marked for staying for more than 8hours. That is because the GPS receiver inside his car is likely to have technical issues due to erractic location marking. However, since the general route could be observed, GPS tampering has been ruled out. As such, the 2 distinct locations that are identifed with Isande Borrasca are aggregated to the following:
+
++ lat: 36.0732, long: 24.8759
++ lat: 36.0524, long: 24.8761
+
+```{r plot 28 routes, echo=FALSE}
+
+gps_path_28 <- gps_sf %>%
+  filter(id==28) %>%
+  summarize(m = mean(Timestamp),
+            do_union = FALSE) %>%
+  st_cast("LINESTRING")
+
 tmap_mode("plot")
-POI_tm_map
+x <- tmBase +
+  tm_shape(gps_path_28) + 
+  tm_lines(col = "blue")
+x
 ```
 
-While there are only 35 employees with assigned car in question, there are 40 locations plotted on the map, where the employees had spent more than 8hrs at. That could mean that 5 **additional** places, occupied by the employees for more than 8 hours, exists. 
+```{r sort out homes}
 
-```{r group homes to employee, include=FALSE}
-
-emply_2homes <- left_join(d_POI_home, employee_data,
-                              by = c("id" = "CarID")) %>%
-  group_by(id) %>%
-  add_count(id, name = "count") %>%
-  ungroup() %>%
-  filter(count >= 2) %>%
-  select(-c(count)) %>%
-  rename(lat = lat111, long = long111)
-
-clean_d_POI_home <- anti_join(d_POI_home, emply_2homes)
 
 ```
+
 
 ```{r print suspicious employees 2 homes, echo=FALSE}
 
-sus_emply_2 <- st_as_sf(emply_2homes, 
-                   coords = c("long", "lat"), 
-                   crs = 4326) %>%
-  st_cast("POINT") #%>%
-
-sus_emply_2$id <- factor(sus_emply_2$id)
-
-tmap_mode("plot")
-
-tmsus <- tmBase +
-  tm_shape(sus_emply_2) + 
-  tm_dots(size = 0.5,
-          col = "id", 
-          palette=c(A='blue', B='green', C='red'))
-
-tmsus
-
-sus_emply_2 %>%
-  kbl() %>%
-  kable_styling()
-  
 ```
 
 From the map and table, it could be inferred that:
@@ -785,57 +777,22 @@ From the map and table, it could be inferred that:
   + 36.052/ 24.876
   + 36.072/ 24.875
   
-```{r add 3 employees, include=FALSE}
-
-x <- data.frame(8, 36.067, 24.886)
-names(x) <- c("id", "lat111", "long111")
-
-y <- data.frame(21, 36.060, 24.905)
-names(y) <- c("id", "lat111", "long111")
-
-y1 <- data.frame(21, 36.063, 24.896)
-names(y1) <- c("id", "lat111", "long111")
-
-z <- data.frame(28, 36.052, 24.876)
-names(z) <- c("id", "lat111", "long111")
-
-z1 <- data.frame(28, 36.072, 24.875)
-names(z1) <- c("id", "lat111", "long111")
-
-distinct_homes <- rbind(clean_d_POI_home, x, y, z, y1, z1)
-
-```
-
 After cleaning, the locations where the employees, with assigned cars, have spent more than 8 hours, are plotted in the map in blue.
 
 ```{r cleaned homes, echo=FALSE}
 
-distinct_homes_as_sf <- st_as_sf(distinct_homes, 
-                   coords = c("long111", "lat111"), 
-                   crs = 4326) %>%
-  st_cast("POINT") #%>%
 
-x <- left_join(distinct_homes_as_sf, employee_data,
-               by = c("id" = "CarID")) %>%
-  select(-c(CurrentEmploymentType)) %>%
-  rename("Last Name" = "LastName",
-         "First Name" = "FirstName",
-         "Job Appointment" = "CurrentEmploymentTitle")
+```
 
-x <- x[c(5,4,3,1,2)]
+We will attempt to find the popular POIs that have cars parked for more than 28 days over the past 14 days.
 
-tmap_mode("view")
 
-tm_homes_POI <- tmBase +
-  tm_shape(d_POI_less_home_tif_sf) + 
-  tm_dots(size = 0.05,
-          alpha = 1,
-          col = "black") +
-  tm_shape(x) + 
-  tm_dots(size = 0.05,
-          col = "blue")
+```{r finding popular POI, include=FALSE}
 
-tm_homes_POI
+
+```
+
+```{r plot pop POI, echo=FALSE}
 
 ```
 
