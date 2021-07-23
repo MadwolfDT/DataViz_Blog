@@ -29,7 +29,7 @@ packages = c('raster', 'sf',
              'grid', 'gridExtra',
              'chron', 'lubridate',
              'kableExtra', 'hms',
-             'sp')
+             'sp', 'mapview')
 
 for(p in packages){
   if(!require(p, character.only = T)){
@@ -777,7 +777,18 @@ d_cfm_home_POI <- d_home_POI %>%
   ungroup() %>%
   mutate(category = "Home") %>%
   filter(count ==1 ) %>%
+  filter(id < 100) %>% #remove trucks
   select(-c(count))
+
+master_POI_list <- d_cfm_home_POI %>%
+  select(-c(timestamp, datestamp, lat111, long111, parked, drop, visitcount, near_lat, near_long, stop))
+
+x <- rbind(master_POI_list, c("GASTech", 36.0480, 24.8796, "Office"))
+x$lat <- as.double(x$lat)
+x$long <- as.double(x$long)
+
+master_POI_list <- x
+
 d_cfm_home_POI$category <- ifelse(d_cfm_home_POI$id > 100, "Office", d_cfm_home_POI$category)
 
 distinct_home_or_office <- d_home_or_office_POI %>%
@@ -952,6 +963,82 @@ save_emp_routes <- function(emp_id, query_date) {
   tmOverall <- tmBase + tmemp_gps_path_i + tmemp_home_office + tmemp_POIs 
 }
 
+save_emp_routes_i <- function(emp_id, query_date) {
+  
+  emp_home_point <- d_cfm_home_POI %>%
+    filter(id == emp_id) %>%
+    select(lat, long)
+  
+  emp_office_point <- d_cfm_home_POI %>%
+    filter(category == "Office") %>%
+    distinct(lat, long)
+  
+  emp_home_office_points <- rbind(emp_home_point, emp_office_point)
+  
+  emp_POIs <- records_POI %>%
+    filter(id == emp_id) %>%
+    filter(datestamp == query_date) %>%
+    select(-c(visitcount)) %>%
+    group_by(lat, long) %>%
+    add_count(lat, long, name = "Number of Visits")
+  
+  emp_home_office_tif_sf <- st_as_sf(emp_home_office_points, 
+                                     coords = c("long", "lat"), 
+                                     crs = 4326) %>%
+    st_cast("POINT") 
+  
+  emp_POIs_tif_sf <- st_as_sf(emp_POIs, 
+                              coords = c("long", "lat"), 
+                              crs = 4326) %>%
+    select(-c(datestamp, lat111, long111, stop, parked, id)) %>%
+    arrange(timestamp) %>%
+    mutate(sequence = 1:n()) %>%
+    st_cast("POINT") 
+  
+  emp_POIs_tif_sf <- emp_POIs_tif_sf[c(3,1,2,4)]
+  
+  query_path <- gps %>%
+    filter(id == emp_id) %>%
+    filter(datestamp == query_date)
+    
+  #convert to coordinates
+  query_path_sf <- st_as_sf(query_path,
+                     coords = c("long", "lat"),
+                     crs = 4326)
+  
+  #string to gps path
+  query_gps_path <- query_path_sf %>%
+    summarize(m = mean(Timestamp),
+              do_union = FALSE) %>%
+    st_cast("LINESTRING")
+  
+  tmemp_home_office_i <- tm_shape(emp_home_office_tif_sf) + 
+    tm_dots(size = 0.08,
+            alpha = 1,
+            col = "green")
+  
+  tmemp_home_office <- tm_shape(emp_home_office_tif_sf) + 
+    tm_dots(size = 0.8,
+            alpha = 1,
+            col = "green")
+  
+  tmemp_POIs_i <- tm_shape(emp_POIs_tif_sf) + 
+    tm_dots(size = 0.05,
+            alpha = 1,
+            col = "blue")
+  
+  tmemp_POIs <- tm_shape(emp_POIs_tif_sf) + 
+    tm_dots(size = 0.5,
+            alpha = 1,
+            col = "blue")
+  
+  tmemp_gps_path_i <- tm_shape(query_gps_path) + 
+    tm_lines()
+  
+  #prints non-interactive size
+  tmOverall <- tmBase + tmemp_gps_path_i + tmemp_home_office_i + tmemp_POIs_i 
+}
+
 #getting ALL the ids with positive home categorisation
 emp_with_cfm_home <- d_cfm_home_POI %>%
   filter(category == "Home") %>%
@@ -1069,7 +1156,167 @@ match_pairs <- combinedpairs %>%
 
 ```
 
-## 4.2 Detecting Anomalies from Movement
+## 4.2 Investigation Transaction Anomalies with GPS Data
+
+Now that we have determined the homes and office of various employees, we can proceed to investigate on the transaction anomalies. 
+
+### 4.2.1 $10,000 at Frydos Autosupply
+
+```{r 10000 txn, echo=FALSE}
+
+txn10000_cc <- cc_data %>%
+  filter(price == 10000)
+
+txn10000_cc %>%
+  kbl() %>%
+  kable_styling()
+
+txn10000_loy <- loyalty_data %>%
+  filter(timestamp == "2014-01-13") %>%
+  filter(location == "Frydos Autosupply n' More")
+
+txn10000_loy %>%
+  kbl() %>%
+  kable_styling()
+
+txnFrydos <- cc_data %>%
+  mutate(datestamp = as.Date(timestamp + 60*60*8)) %>%
+  filter(datestamp == "2014-01-13") %>%
+  filter(location == "Frydos Autosupply n' More")
+
+txnFrydos %>%
+  kbl() %>%
+  kable_styling()
+
+```
+
+The transaction was transacted by somebody holding onto the card, 9551. And a check with the loyalty card data for all transactions on 13 Jan 2014 at Frydos Autosupply n' More indicated that there are no transaction bearing $10,000. After crossing checking between credit card transactions and loyalty card transactions, only 2 transactions bear the exact price, suggesting the following:
+
+* Credit Card holders may not use their loyalty card.
+* Loyalty Card holders may use alternatives, such as cash, for their transactions
+
+We would go on to examine the routes for all the vehicles on 13 Jan and none of the route profile matches the spending pattern as suggested by the transactions. However, CarID 24 and 35 bore some resemblences and we would further examine.
+
+```{r 9551 txn, eval=FALSE, include=FALSE}
+
+all_card9551_txn <- cc_data %>%
+  filter(last4ccnum == 9551) %>%
+  mutate(datestamp = as.Date(timestamp+60*60*8)) %>%
+  filter(price != 10000)
+
+card9551_txn_chart <- ggplot(all_card9551_txn,
+                       aes(datestamp, price)) +
+  geom_raster(aes(fill = location)) + 
+  labs(x = "Time", y = "Date", title = "Vehicle Moving Plot") +
+  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1.1, hjust = 1.1),
+        axis.text.y = element_text(size = 6),
+        plot.title = element_text(hjust = 0.5))
+
+card9551_txn_chart
+
+```
+
+```{r card 9551, echo=FALSE}
+
+card9551 <- cc_data %>%
+  filter(last4ccnum == 9551) %>%
+  mutate(datestamp = as.Date(timestamp+60*60*8)) %>%
+  filter(datestamp == "2014-01-13") %>%
+  select(-c(datestamp))
+
+card9551 %>%
+  kbl() %>%
+  kable_styling()
+
+
+#for(i in 1:30){
+#  
+#  print_map <- save_emp_routes(i, "2014-01-13")
+#  
+#  tmap_save(print_map, paste("13 Jan Route of ", i, ".png", sep = ""))
+#  
+#}
+#
+#for(i in 32:35){
+#  
+#  print_map <- save_emp_routes(i, "2014-01-13")
+#  
+#  tmap_save(print_map, paste("13 Jan Route of ", i, ".png", sep = ""))
+#  
+#}
+#
+#print_map <- save_emp_routes(101, "2014-01-13")
+#  
+#tmap_save(print_map, paste("13 Jan Route of ", 101, ".png", sep = ""))
+#
+#for(i in 107:107){
+#  
+#  print_map <- save_emp_routes(i, "2014-01-13")
+#  
+#  tmap_save(print_map, paste("13 Jan Route of ", i, ".png", sep = ""))
+#  
+#}
+
+```
+
+#### 4.2.1.1 Vehicle ID 24
+
+```{r route 24, echo=FALSE}
+
+card24_1 <- print_map <- save_emp_routes_i(24, "2014-01-13")
+card24_2 <- print_map <- save_emp_routes_i(24, "2014-01-14")
+
+tmap_mode("view")
+
+card24_1
+card24_2
+
+card24_POIs <- records_POI %>%
+  filter(id == 24) %>%
+  filter(datestamp == "2014-01-13"| datestamp == "2014-01-14") %>%
+  select(-c(visitcount, lat111, long111)) %>%
+  group_by(lat, long) %>%
+  add_count(lat, long, name = "Number of Visits") %>%
+  ungroup()
+
+x <- card24_POIs %>%
+  left_join(select(master_POI_list, category, lat, long),
+            by = c("lat", "long"))
+
+card24_POIs <- x
+
+card24_POIs %>%
+  kbl() %>%
+  kable_styling()
+
+```
+
+#### 4.2.1.2 Vehicle ID 35
+
+```{r route 28, eval=FALSE, include=FALSE}
+#15 has 2 matches for 1900hrs
+car_ID <- 35
+
+card_i <- print_map <- save_emp_routes_i(car_ID, "2014-01-13")
+
+tmap_mode("view")
+
+card_i
+
+card_POIs <- records_POI %>%
+    filter(id == car_ID) %>%
+    filter(datestamp == "2014-01-13") %>%
+    select(-c(visitcount, lat111, long111)) %>%
+    group_by(lat, long) %>%
+    add_count(lat, long, name = "Number of Visits")
+
+card_POIs %>%
+  kbl() %>%
+  kable_styling()
+
+```
+
+## 4.3 Detecting Anomalies from Movement
 
 Now that we have identified the specific POIs, we can now turn our focus to identify anomalies in the movement of the vehicles.
 
@@ -1154,6 +1401,130 @@ moving_chart2
 moving_chart3
 moving_chart4
 moving_chart5
+
+```
+
+From the charts, a couple of anomalies were observed by the following employees:
+
+(to list out)
+
+We will examine them in detail.
+
+```{r anomalies in movement, echo=FALSE}
+
+gps_employee <- left_join(gps, employee_data,
+                          by = c("id" = "CarID"))
+  
+x <- gps_employee %>%
+  mutate(time = as_hms(Timestamp)) %>%
+  group_by(id, datestamp) %>%
+  mutate(count = n()) %>%
+  ungroup()
+
+detail_group1_gps_employee <- x %>% filter(id == 1 |
+                                           id == 16 |
+                                           id == 28 |
+                                           id == 9 |
+                                           id == 8 |
+                                           id == 5) %>%
+  mutate(name = paste(FirstName, LastName, sep =" "))
+detail_group2_gps_employee <- x %>% filter(id == 15 |
+                                           id == 21 |
+                                           id == 26 |
+                                           id == 24 |
+                                           id == 19 |
+                                           id == 29) %>%
+  mutate(name = paste(FirstName, LastName, sep =" "))
+
+detail_moving_chart1 <- ggplot(detail_group1_gps_employee,
+                       aes(label = lat, label2 = long)) +
+  facet_wrap(.~name) +
+  geom_point(aes(time, datestamp)) + 
+  labs(x = "", y = "", title = "Vehicle Moving Plot") +
+  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1.1, hjust = 1.1),
+        axis.text.y = element_text(size = 6),
+        plot.title = element_text(hjust = 0.5))
+
+detail_moving_chart2 <- ggplot(detail_group2_gps_employee,
+                       aes(label = lat, label2 = long)) +
+  facet_wrap(.~name) +
+  geom_point(aes(time, datestamp)) + 
+  labs(x = "", y = "", title = "Vehicle Moving Plot") +
+  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1.1, hjust = 1.1),
+        axis.text.y = element_text(size = 6),
+        plot.title = element_text(hjust = 0.5))
+
+#ggplotly(detail_moving_chart1)
+#ggplotly(detail_moving_chart2)
+#detail_moving_chart1
+#detail_moving_chart2
+
+```
+```{r plot for 10 Jan, echo=FALSE}
+
+st1 <- date_time_parse("2014-01-10 22:00", 
+                       zone = "",
+                       format = "%Y-%m-%d %H:%M")
+et1 <- date_time_parse("2014-01-11 06:00", 
+                       zone = "",
+                       format = "%Y-%m-%d %H:%M")
+
+sel_10_emply_POIs <- records_POI %>%
+  filter(timestamp >= st1 & timestamp <= et1)
+
+sel_10_emply_POIs_tif_sf <- st_as_sf(sel_10_emply_POIs, 
+                              coords = c("long", "lat"), 
+                              crs = 4326) %>%
+    select(-c(datestamp, lat111, long111, stop, parked, visitcount)) %>%
+  st_cast("POINT") 
+
+x <- left_join(sel_10_emply_POIs_tif_sf, employee_data,
+               by = c("id" = "CarID"))
+
+x <- left_join(x, records_POI,
+            by = c("id", "timestamp")) %>%
+  select(-c(datestamp, lat111, long111, stop, parked, visitcount))
+
+x <- x %>%
+  select(-c(CurrentEmploymentType)) %>%
+  group_by(lat, long) %>%
+  add_count(lat, long, name = "No of Visits")
+
+sel_10_emply_POIs_tif_sf <- x
+
+sel_10_gps <- gps %>%
+  filter(Timestamp >= st1 & Timestamp <= et1)
+
+sel_10_gps_sf <- st_as_sf(sel_10_gps,
+                   coords = c("long", "lat"),
+                   crs = 4326)
+
+sel_10_gps_sf_path <- sel_10_gps_sf %>%
+  group_by(id) %>%
+  summarize(m = mean(Timestamp),
+            do_union = FALSE) %>%
+  st_cast("LINESTRING")
+
+#detect and delete orphan path
+p = npts(sel_10_gps_sf_path, by_feature = TRUE)
+sel_10_gps_sf_path2 <- cbind(sel_10_gps_sf_path, p) %>%
+  filter(p >= 2)
+
+sel_10_gps_sf_path <- sel_10_gps_sf_path2
+
+sel_10_gps_sf_path$id <- as_factor(sel_10_gps_sf_path$id)
+
+tm10_i <- tmBase_i +
+  tm_shape(sel_10_emply_POIs_tif_sf) + 
+  tm_dots(size = 0.05,
+          alpha = 1,
+          col = "blue") + 
+    tm_shape(sel_10_gps_sf_path) + 
+  tm_lines(col = "id",
+           palette = c("blue", "green", "red", "orange"))
+
+tmap_mode("view")
+tm10_i
 
 ```
 
