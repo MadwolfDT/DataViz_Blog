@@ -583,6 +583,11 @@ gps$Timestamp <- date_time_parse(gps$Timestamp,
                                  zone = "",
                                  format = "%m/%d/%Y %H:%M:%S")
 
+x <- gps %>%
+  mutate(datestamp = as.Date(Timestamp + 60*60*8))
+
+gps <- x
+
 ##convert
   gps_sf <- st_as_sf(gps,
                      coords = c("long", "lat"),
@@ -603,6 +608,9 @@ locations_gps$lat <- round(locations_gps$lat, digits = 4)
 locations_gps$long <- round(locations_gps$long, digits = 4)
   
 ```
+
+## 4.1 Determine Places of Interests
+
 In order to analyse the GPS data more efficiently and effectively, there is a need to determine possible Places of Interests (POIs) in Abila, Kronos. To do so, we can break them down into the following categories:
 
 + Homes
@@ -825,6 +833,8 @@ add_28 <- d_home_or_office_POI %>% #2 places?
 
 x <- rbind(d_cfm_home_POI, add_1, add_17, add_21, add_22, add_25, add_28, add_30, add_5, add_6, add_9)
 
+rm(add_1, add_17, add_21, add_22, add_25, add_28, add_30, add_5, add_6, add_9)
+
 d_cfm_home_POI <- x
 
 d_cfm_home_POI_tif_sf <- st_as_sf(d_cfm_home_POI, 
@@ -864,6 +874,101 @@ tm_d_cfm_home_POI_labels <- tm_shape(d_cfm_home_POI_tif_sf) +
 
 ```
 
+```{r plot routes with home and office, include=FALSE}
+
+save_emp_routes <- function(emp_id, query_date) {
+  
+  emp_home_point <- d_cfm_home_POI %>%
+    filter(id == emp_id) %>%
+    select(lat, long)
+  
+  emp_office_point <- d_cfm_home_POI %>%
+    filter(category == "Office") %>%
+    distinct(lat, long)
+  
+  emp_home_office_points <- rbind(emp_home_point, emp_office_point)
+  
+  emp_POIs <- records_POI %>%
+    filter(id == emp_id) %>%
+    filter(datestamp == query_date) %>%
+    select(-c(visitcount)) %>%
+    group_by(lat, long) %>%
+    add_count(lat, long, name = "Number of Visits")
+  
+  emp_home_office_tif_sf <- st_as_sf(emp_home_office_points, 
+                                     coords = c("long", "lat"), 
+                                     crs = 4326) %>%
+    st_cast("POINT") 
+  
+  emp_POIs_tif_sf <- st_as_sf(emp_POIs, 
+                              coords = c("long", "lat"), 
+                              crs = 4326) %>%
+    select(-c(datestamp, lat111, long111, stop, parked, id)) %>%
+    arrange(timestamp) %>%
+    mutate(sequence = 1:n()) %>%
+    st_cast("POINT") 
+  
+  emp_POIs_tif_sf <- emp_POIs_tif_sf[c(3,1,2,4)]
+  
+  query_path <- gps %>%
+    filter(id == emp_id) %>%
+    filter(datestamp == query_date)
+    
+  #convert to coordinates
+  query_path_sf <- st_as_sf(query_path,
+                     coords = c("long", "lat"),
+                     crs = 4326)
+  
+  #string to gps path
+  query_gps_path <- query_path_sf %>%
+    summarize(m = mean(Timestamp),
+              do_union = FALSE) %>%
+    st_cast("LINESTRING")
+  
+  tmemp_home_office_i <- tm_shape(emp_home_office_tif_sf) + 
+    tm_dots(size = 0.08,
+            alpha = 1,
+            col = "green")
+  
+  tmemp_home_office <- tm_shape(emp_home_office_tif_sf) + 
+    tm_dots(size = 0.8,
+            alpha = 1,
+            col = "green")
+  
+  tmemp_POIs_i <- tm_shape(emp_POIs_tif_sf) + 
+    tm_dots(size = 0.05,
+            alpha = 1,
+            col = "blue")
+  
+  tmemp_POIs <- tm_shape(emp_POIs_tif_sf) + 
+    tm_dots(size = 0.5,
+            alpha = 1,
+            col = "blue")
+  
+  tmemp_gps_path_i <- tm_shape(query_gps_path) + 
+    tm_lines()
+  
+  #prints non-interactive size
+  tmOverall <- tmBase + tmemp_gps_path_i + tmemp_home_office + tmemp_POIs 
+}
+
+#getting ALL the ids with positive home categorisation
+emp_with_cfm_home <- d_cfm_home_POI %>%
+  filter(category == "Home") %>%
+  select(id)
+
+#n <- nrow(emp_with_cfm_home)
+#
+#for(i in 1:n){
+#  
+#  print_map <- save_emp_routes(emp_with_cfm_home$id[i], "2014-01-06")
+#  
+#  #tmap_save(print_map, paste("06 Jan Route of ", emp_with_cfm_home$id[i], ".png", sep = ""))
+#  
+#}
+
+```
+
 It was determined that GASTech location is at (36.0480/ 24.8796) because there are high frequency counts by 6 of the employees, suggesting that the following 6 employees have stayed for more than 8 hours in office, at least once, during the past 2 weeks.
 
 + Nils Calixto, IT Helpdesk
@@ -877,12 +982,7 @@ It was determined that GASTech location is at (36.0480/ 24.8796) because there a
 ```{r home or office}
 tmap_mode("view")
 x <- tmBase_i + tm_d_cfm_home_POI_i + tm_d_cfm_home_POI_labels
-tmap_leaflet(x)
-```
-
-
-```{r print suspicious employees 2 homes, echo=FALSE}
-
+x
 ```
 
 From the map and table, it could be inferred that:
@@ -909,10 +1009,156 @@ From the map and table, it could be inferred that:
   + Lat: 36.0817, Long: 24.8510
   + Lat: 36.0842, Long: 24.8564
 
+```{r match txn with gps, eval=FALSE, include=FALSE}
+
+getTxn <- function(x){
+  df.x <- cc_data %>%
+  mutate(datestamp = as.Date(timestamp + 60*60*8)) %>%
+  filter(datestamp == x) %>%
+  group_by(last4ccnum) %>%
+  add_count(last4ccnum, name = "count") %>%
+  ungroup()
+  
+  df.x$count <- df.x$count + 2
+  
+  return(df.x)
+}
+
+getGPS <- function(x) {
+  
+  records_POI %>%
+  filter(datestamp == x)
+
+}
+
+joinTxnGPS <- function(x,y) {
+  
+  x <- x %>%
+    select("last4ccnum", "count") %>%
+    group_by(last4ccnum, count) %>%
+    distinct(last4ccnum, count) %>%
+    ungroup()
+  y <- y %>%
+    select("id", "visitcount") %>%
+    group_by(id, visitcount) %>%
+    distinct(id, visitcount) %>%
+    ungroup()
+  
+  z <- inner_join(x, y,
+                  by = c("count" = "visitcount"))
+  
+}
+
+combinedpairs <- setNames(data.frame(matrix(ncol = 3, nrow = 0)), c("last4ccnum", "count", "id"))
+
+for(i in 6:19){
+  
+  txnDate <- paste("2014-01-", i, sep = "")
+  
+  x.txn <- getTxn(txnDate)
+  y.Gps <- getGPS(txnDate)
+  z.join <- joinTxnGPS(x,y)
+  
+  combinedpairs <-rbind(combinedpairs, z.join)
+  
+}
+
+match_pairs <- combinedpairs %>%
+  distinct(last4ccnum, id, .keep_all = TRUE)
+
+
+```
+
+## 4.2 Detecting Anomalies from Movement
+
+Now that we have identified the specific POIs, we can now turn our focus to identify anomalies in the movement of the vehicles.
+
+```{r plot moving chart, include=FALSE}
+
+gps_employee <- left_join(gps, employee_data,
+                          by = c("id" = "CarID"))
+  
+x <- gps_employee %>%
+  mutate(time = as_hms(Timestamp)) %>%
+  group_by(id, datestamp) %>%
+  mutate(count = n()) %>%
+  ungroup()
+
+group1_gps_employee <- x %>% filter(id >= 1 & id <= 9) %>%
+  mutate(name = paste(FirstName, LastName, sep =" "))
+group2_gps_employee <- x %>% filter(id >= 10 & id <= 18) %>%
+  mutate(name = paste(FirstName, LastName, sep =" "))
+group3_gps_employee <- x %>% filter(id >= 19 & id <= 27)%>%
+  mutate(name = paste(FirstName, LastName, sep =" "))
+group4_gps_employee <- x %>% filter(id >= 28 & id <= 35)%>%
+  mutate(name = paste(FirstName, LastName, sep =" "))
+truck_gps_employee <- x %>% filter(id >= 101 & id <= 107)%>%
+  mutate(name = paste(FirstName, LastName, sep =" "))
+
+moving_chart1 <- ggplot(group1_gps_employee,
+                       aes(label = lat, label2 = long)) +
+  facet_wrap(.~name) +
+  geom_point(aes(time, datestamp)) + 
+  labs(x = "Time", y = "Date", title = "Vehicle Moving Plot") +
+  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1.1, hjust = 1.1),
+        axis.text.y = element_text(size = 6),
+        plot.title = element_text(hjust = 0.5))
+
+moving_chart2 <- ggplot(group2_gps_employee,
+                       aes(label = lat, label2 = long)) +
+  facet_wrap(.~name) +
+  geom_point(aes(time, datestamp)) + 
+  labs(x = "Time", y = "Date", title = "Vehicle Moving Plot") +
+  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1.1, hjust = 1.1),
+        axis.text.y = element_text(size = 6),
+        plot.title = element_text(hjust = 0.5))
+
+moving_chart3 <- ggplot(group3_gps_employee,
+                       aes(label = lat, label2 = long)) +
+  facet_wrap(.~name) +
+  geom_point(aes(time, datestamp)) + 
+  labs(x = "Time", y = "Date", title = "Vehicle Moving Plot") +
+  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1.1, hjust = 1.1),
+        axis.text.y = element_text(size = 6),
+        plot.title = element_text(hjust = 0.5))
+
+moving_chart4 <- ggplot(group4_gps_employee,
+                       aes(label = lat, label2 = long)) +
+  facet_wrap(.~name) +
+  geom_point(aes(time, datestamp)) + 
+  labs(x = "Time", y = "Date", title = "Vehicle Moving Plot") +
+  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1.1, hjust = 1.1),
+        axis.text.y = element_text(size = 6),
+        plot.title = element_text(hjust = 0.5))
+
+moving_chart5 <- ggplot(truck_gps_employee,
+                       aes(label = lat, label2 = long)) +
+  facet_wrap(.~name) +
+  geom_point(aes(time, datestamp)) + 
+  labs(x = "Time", y = "Date", title = "Vehicle Moving Plot") +
+  theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 1.1, hjust = 1.1),
+        axis.text.y = element_text(size = 6),
+        plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r print ggploty routes, echo=FALSE}
+
+#ggplotly(moving_chart1)
+#ggplotly(moving_chart2)
+#ggplotly(moving_chart3)
+#ggplotly(moving_chart4)
+#ggplotly(moving_chart5)
+moving_chart1
+moving_chart2
+moving_chart3
+moving_chart4
+moving_chart5
+
+```
+
 
 # 5. Inferring Owners of Each Credit Card with Loyalty Card
-
-
 
 ```{r Q3 DataTable, eval=FALSE, include=FALSE}
 
