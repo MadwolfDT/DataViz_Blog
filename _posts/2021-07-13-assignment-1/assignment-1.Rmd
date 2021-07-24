@@ -1223,7 +1223,7 @@ The transaction was transacted by somebody holding onto the card, 9551. And a ch
 
 We would go on to examine the routes for all the vehicles on 13 Jan and none of the route profile matches the spending pattern as suggested by the transactions. However, CarID 24 and 35 bore some resemblences and we would further examine.
 
-```{r 9551 txn, echo=TRUE}
+```{r 9551 txn, eval=FALSE, include=FALSE}
 
 all_card9551_txn <- cc_data %>%
   filter(last4ccnum == 9551) %>%
@@ -1474,7 +1474,19 @@ moving_chart5
 
 From the charts, a couple of anomalies were observed by the following employees:
 
-(to list out)
+* Gustav Cazar
+* Isak Baza
+* Isande Borrasca
+* Isia Vann
+* Lucas Alcazar
+* Nils Calixto
+* Bertrand Ovan
+* Hennie Osvaldo
+* Loreto Bodrogi
+* Marin Onda
+* Minke Mies
+* Vira Frente
+
 
 We will examine them in detail.
 
@@ -1522,10 +1534,11 @@ detail_moving_chart2 <- ggplot(detail_group2_gps_employee,
         axis.text.y = element_text(size = 6),
         plot.title = element_text(hjust = 0.5))
 
+#removing the interactive to prevent longer load
 #ggplotly(detail_moving_chart1)
 #ggplotly(detail_moving_chart2)
-#detail_moving_chart1
-#detail_moving_chart2
+detail_moving_chart1
+detail_moving_chart2
 
 ```
 ```{r plot for 10 Jan, echo=FALSE}
@@ -1597,9 +1610,162 @@ tm10_i
 ```
 
 
-# 5. Inferring Owners of Each Credit Card with Loyalty Card
+# 5. Question 3 - Inferring Owners of Each Credit Card with Loyalty Card
 
-```{r Q3 DataTable, eval=FALSE, include=FALSE}
+```{r Credit Loyalty Cards, echo=TRUE}
+##Merging cc_data and loyalty_data 
+
+day_cc_data <- cc_data %>%
+  mutate(day = get_day(timestamp))
+
+day_loyalty_data <- loyalty_data %>%
+  mutate(day = get_day(timestamp))
+
+cc_loyalty_data <- merge(day_cc_data, day_loyalty_data,
+                         by = c("day", "location", "price"),
+                         all.x = TRUE)
+
+data_1286 <- cc_loyalty_data %>%
+  filter(last4ccnum == 1286)
+
+#finding duplicated data caused by merge
+#Reason 1: 1 cc card user uses 2 loyalty cards
+#Reason 2: 1 loyalty card holder uses 2 cc cards
+cc_loyalty_data <- cc_loyalty_data %>%
+    add_count(day, location, price, name = "count")
+
+#filter out all those with duplicates done by merging
+cc_loyalty_data <- cc_loyalty_data %>%
+  filter(count <=1)
+
+#some cc transactions did not use loyalty card
+#we remove them first
+cc_loyalty_data <- cc_loyalty_data %>%
+  filter(!is.na(loyaltynum))
+
+#having a table matching last4ccnum and loyaltynum
+cc_loyalty_binding <- cc_loyalty_data %>%
+  distinct(last4ccnum, loyaltynum)
+
+#check for more than 1 cc
+cc_loyalty_binding <- cc_loyalty_binding %>%
+  add_count(last4ccnum, name = "cc_count")
+
+#remove the cc duplicate
+cc_loyalty_binding <- cc_loyalty_binding %>%
+  filter(cc_count <=1)
+
+#check for more than 1 loyalty card
+cc_loyalty_binding <- cc_loyalty_binding %>%
+  add_count(loyaltynum, name = "lo_count")
+
+#remove the loyalty card duplicate
+cc_loyalty_binding <- cc_loyalty_binding %>%
+  filter(lo_count <=1)
+
+cc_loyalty_data <- cc_data %>%
+  mutate(loyaltynum = "")
+
+#updating the loyalty number with loyalty_cc binding
+cc_loyalty_data$loyaltynum <- cc_loyalty_binding$loyaltynum[match(cc_loyalty_data$last4ccnum, cc_loyalty_binding$last4ccnum)]
+
+#find unidentified loyalty_data
+without_loyalty_data <- cc_loyalty_data %>%
+  filter(is.na(loyaltynum)) %>%
+  distinct(last4ccnum)
+
+without_loyalty_data <- without_loyalty_data$last4ccnum
+
+cc_data_without_loyalty <- cc_data %>%
+  filter(last4ccnum == without_loyalty_data[1]|
+         last4ccnum == without_loyalty_data[2]|
+         last4ccnum == without_loyalty_data[3])
+
+cc_data_without_loyalty <- cc_data_without_loyalty %>%
+  mutate(day = get_day(timestamp))
+
+shared_cc_loyalty <- merge(cc_data_without_loyalty, day_loyalty_data,
+           by = c("day", "location", "price"),
+                         all.x = TRUE)
+
+#discovered 1 user could have used 2 different types of credit cards
+shared_cc_loyalty <- shared_cc_loyalty %>%
+  filter(!is.na(loyaltynum)) %>%
+  distinct(last4ccnum, loyaltynum)
+
+##########################################
+#At this stage, we found out the following:
+#1286 uses 2 loyalty cards, L3288 and L3572
+#L6267 uses 2 credit cards, 6691 and 6889
+##########################################
+
+#adjust the cc_loyalty_binding to remove duplicates
+cc_loyalty_binding <- cc_loyalty_binding %>%
+  filter(loyaltynum != "L3288")
+
+cc_loyalty_binding <- cc_loyalty_binding %>%
+  select(-c(cc_count, lo_count))
+
+cc_loyalty_binding <- rbind(cc_loyalty_binding, shared_cc_loyalty)
+
+colnames(cc_loyalty_binding)[which(names(cc_loyalty_binding) == "last4ccnum")] <- "Credit Card"
+colnames(cc_loyalty_binding)[which(names(cc_loyalty_binding) == "loyaltynum")] <- "Loyalty Card"
+
+#########################################
+#Attentping to find transaction that matches but are distinctly different
+#########################################
+
+questionable_data <- merge(day_cc_data, day_loyalty_data,
+                         by = c("day", "location", "price"),
+                         all.x = TRUE)
+
+#finding duplicated data caused by merge
+#Reason 1: 1 cc card user uses 2 loyalty cards
+#Reason 2: 1 loyalty card holder uses 2 cc cards
+questionable_data <- questionable_data %>%
+    add_count(day, location, price, name = "count")
+
+#filter out all those with duplicates done by merging
+questionable_data <- questionable_data %>%
+  filter(count >1)
+
+questionable_loyalty1 <- loyalty_data %>%
+  filter(location == "Katrina's Café" &
+           price == 26.60 &
+           get_day(timestamp) == 9)
+
+questionable_loyalty2 <- loyalty_data %>%
+  filter(location == "Guy's Gyros" &
+           price == 8.23 &
+           get_day(timestamp) == 9)
+
+questionable_loyalty3 <- loyalty_data %>%
+  filter(location == "Hippokampos" &
+           price == 63.21 &
+           get_day(timestamp) == 11)
+
+problem_data <- rbind(questionable_loyalty1, questionable_loyalty2, questionable_loyalty3)
+
+cc_questionable1 <- cc_data %>%
+  filter(location == "Katrina's Café" &
+           price == 26.60 &
+           get_day(timestamp) == 9)
+
+cc_questionable2 <- cc_data %>%
+  filter(location == "Guy's Gyros" &
+           price == 8.23 &
+           get_day(timestamp) == 9)
+
+cc_questionable3 <- cc_data %>%
+  filter(location == "Hippokampos" &
+           price == 63.21 &
+           get_day(timestamp) == 11)
+
+cc_problem_data <- rbind(cc_questionable1, cc_questionable2, cc_questionable3)
+
+```
+
+```{r Q3 DataTable, echo=TRUE}
 
 DT::datatable(cc_loyalty_binding, 
               options = list(
@@ -1638,7 +1804,7 @@ It was observed that:
 
 We can see that owner of 1286 used **two different loyalty cards** at various instances.
 
-```{r 1286, eval=FALSE, include=FALSE}
+```{r 1286, echo=TRUE}
 
 data_1286 <- data_1286 %>%
   select(-c(timestamp.y, day))
